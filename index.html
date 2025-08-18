@@ -4,29 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Family Tree Project</title>
-    
+    <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="leaves-container" id="leaves-container"></div>
-    <div id="app-overlay"></div> <div class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <i class="fa-solid fa-tree"></i>
-                <span>The Family Tree Project</span>
-            </div>
-            
-            <nav class="navigation-controls">
-                <div class="search-container">
-                    <i class="fa-solid fa-search"></i>
-                    <input type="search" id="search-member" placeholder="Focus on a person..." list="member-names">
-                    <datalist id="member-names"></datalist>
-                </div>
+    <div id="app-overlay"></div>
+    
+    <aside id="controls-bar" class="controls-sidebar">
+        <div class="sidebar-header">
+            <h3>Controls</h3>
+            <button id="close-controls-btn" class="ui-icon-btn close-btn">&times;</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="control-section">
+                <strong class="control-title">Filters</strong>
                 <div class="filter-group">
                     <label for="side-filter">Family Side</label>
                     <select id="side-filter">
@@ -45,12 +40,58 @@
                         <option value="3">Current</option>
                     </select>
                 </div>
-            </nav>
-
-            <div class="action-buttons">
-                <button class="btn" id="add-relationship-btn"><i class="fa-solid fa-link"></i> Add Relationship</button>
+            </div>
+            <div class="control-section">
+                <strong class="control-title">View Options</strong>
+                 <div class="toggle-group">
+                    <label for="toggle-lines">Show Lines</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-lines" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-group">
+                    <label for="toggle-roles">Show Role Titles</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-roles" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-group">
+                    <label for="toggle-annotations">Show Annotations</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-annotations" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="control-section" id="relationship-manager">
+                <strong class="control-title">Relationship Manager</strong>
+                <form id="relationship-form-sidebar">
+                    <div class="filter-group">
+                        <label for="rel-from">From</label>
+                        <select id="rel-from"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="rel-to">To</label>
+                        <select id="rel-to"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="rel-type">As</label>
+                        <select id="rel-type">
+                             <option value="Spouse">Spouse</option>
+                             <option value="Parent-Child">Parent-Child</option>
+                             <option value="Sibling">Sibling</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Link</button>
+                </form>
+                <div id="existing-relationships-list"></div>
+            </div>
+            <div class="control-section">
+                <strong class="control-title">Export</strong>
                 <div class="dropdown">
-                    <button class="btn dropdown-btn"><i class="fa-solid fa-download"></i> Export Options</button>
+                    <button class="btn dropdown-btn"><i class="fa-solid fa-download"></i> Export Options <i class="fa-solid fa-chevron-down"></i></button>
                     <div class="dropdown-content">
                         <a href="#" id="exportPngBtn"><i class="fa-solid fa-image"></i> Export as PNG</a>
                         <a href="#" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
@@ -59,10 +100,40 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </aside>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="ui-icon-btn" id="toggle-controls-btn" title="Toggle Controls">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-tree"></i>
+                    <span>The Family Tree Project</span>
+                </a>
+            </div>
+            <nav class="main-nav">
+                <a href="index.html" class="active">Home</a>
+                <a href="how-to.html">How To</a>
+                <a href="about.html">About</a>
+            </nav>
+            <div class="header-actions">
+                <div class="search-container">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="search" id="search-member" placeholder="Focus on a person..." list="member-names">
+                    <datalist id="member-names"></datalist>
+                </div>
+            </div>
         </header>
 
         <main class="main-canvas" id="main-canvas">
             <div class="tree-container" id="tree-container">
+                <div id="empty-state-message">
+                    <i class="fa-solid fa-plus"></i>
+                    <h2>Let's get started by adding a family member</h2>
+                </div>
                 <svg id="tree-connections" xmlns="http://www.w3.org/2000/svg"></svg>
                 <div id="connection-annotations"></div>
                 <div class="tree-layout" id="tree-layout"></div>
@@ -71,8 +142,9 @@
         
         <div class="ui-controls">
             <div class="view-controls">
-                <button id="globalResetBtn" title="Reset View & Filters"><i class="fa-solid fa-arrows-rotate"></i></button>
-                <button id="fullscreenBtn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+                <button class="ui-icon-btn" id="globalResetBtn" title="Reset View & Filters"><i class="fa-solid fa-arrows-rotate"></i></button>
+                <button class="ui-icon-btn" id="fullscreenBtn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+                <button class="ui-icon-btn btn-danger" id="clearDataBtn" title="Clear All Data"><i class="fa-solid fa-trash"></i></button>
             </div>
             <div class="zoom-controls">
                 <button id="zoomOutBtn"><i class="fa-solid fa-minus"></i></button>
@@ -81,8 +153,6 @@
             </div>
         </div>
     </div>
-    
-    <div class="toast" id="toast"></div>
     
     <div class="modal-overlay" id="edit-modal">
         <div class="modal-content">
@@ -115,11 +185,6 @@
                             <input type="text" id="newTagInput" placeholder="Add a tag and press Enter">
                         </div>
                     </div>
-                    <div class="form-group full-width" id="family-links-section">
-                        <label>Family Links</label>
-                        <div id="family-links-display"></div>
-                        <button type="button" class="btn btn-small" id="link-parent-btn"><i class="fa-solid fa-plus"></i> Link Parent</button>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -132,30 +197,12 @@
     <div class="modal-overlay" id="relationship-modal">
         <div class="modal-content small">
             <div class="modal-header">
-                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship</h2>
+                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship Annotation</h2>
                 <button class="modal-close-btn">&times;</button>
             </div>
-            <form id="relationship-form">
+            <form id="relationship-form-modal">
                 <div class="modal-body">
                         <input type="hidden" id="relationshipId">
-                        <div class="form-group full-width">
-                            <label for="relationshipType">Relationship Type</label>
-                            <select id="relationshipType">
-                                <option value="Spouse">Spouse</option>
-                                <option value="Parent-Child">Parent-Child</option>
-                                <option value="Sibling">Sibling</option>
-                            </select>
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="relationshipStatus">Status</label>
-                            <select id="relationshipStatus">
-                                <option value="Married">Married</option>
-                                <option value="Divorced">Divorced</option>
-                                <option value="Partner">Partner</option>
-                                <option value="Parent">Parent</option>
-                                <option value="Sibling">Sibling</option>
-                            </select>
-                        </div>
                         <div class="form-group full-width">
                             <label for="relationshipAnnotation">Annotation / Note</label>
                             <textarea id="relationshipAnnotation" rows="3"></textarea>
