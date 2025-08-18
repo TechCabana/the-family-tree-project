@@ -1,13 +1,11 @@
-// js/main.js
 import { familyData as initialFamilyData } from './data.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- STATE MANAGEMENT ---
     let familyData = JSON.parse(JSON.stringify(initialFamilyData));
-    let currentViewMembers = familyData.members;
+    let currentViewMembers = [];
     let scale = 1;
-    let linkingState = { active: false, from: null, type: null };
 
     // --- DOM ELEMENT REFERENCES ---
     const appOverlay = document.getElementById('app-overlay');
@@ -31,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatarUploadInput = document.getElementById('avatarUpload');
     const tagsInputContainer = document.getElementById('tags-input-container');
     const newTagInput = document.getElementById('newTagInput');
+    const emptyStateMessage = document.getElementById('empty-state-message');
     
     // --- UTILITY FUNCTIONS ---
     const getInitials = (name) => {
@@ -48,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showToast = (message) => {
         const toast = document.getElementById('toast');
+        if(!toast) return;
         toast.textContent = message;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
@@ -55,23 +55,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     function init() {
-        populateSearchDatalist();
         addEventListeners();
         createFloatingLeaves();
-        renderTree(familyData.members);
+        applyFilters(); // Use applyFilters for the initial render
     }
 
     // --- EVENT LISTENERS ---
     function addEventListeners() {
+        const controlsBar = document.getElementById('controls-bar');
+        
+        // Sidebar Toggle Buttons
+        document.getElementById('toggle-controls-btn').addEventListener('click', () => {
+            controlsBar.classList.add('is-open');
+        });
+        document.getElementById('close-controls-btn').addEventListener('click', () => {
+            controlsBar.classList.remove('is-open');
+        });
+
         // Top Bar & Global Controls
         searchInput.addEventListener('change', handleSearch);
         sideFilter.addEventListener('change', applyFilters);
         levelFilter.addEventListener('change', applyFilters);
         document.getElementById('globalResetBtn').addEventListener('click', () => { resetView(); resetAllFilters(); });
-        document.getElementById('add-relationship-btn').addEventListener('click', () => {
-            showToast('LINKING MODE: Select the first person.');
-            enterLinkingMode(null, 'Spouse');
+        document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+        emptyStateMessage.addEventListener('click', () => openEditModal());
+        document.getElementById('toggle-lines').addEventListener('change', (e) => {
+            document.body.classList.toggle('hide-connections', !e.target.checked);
         });
+        document.getElementById('toggle-roles').addEventListener('change', (e) => {
+            document.body.classList.toggle('hide-roles', !e.target.checked);
+        });
+        document.getElementById('toggle-annotations').addEventListener('change', (e) => {
+            document.body.classList.toggle('hide-annotations', !e.target.checked);
+        });
+
+        // Relationship Manager in Sidebar
+        document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
 
         // Zoom, Pan, Fullscreen
         document.getElementById('zoomInBtn').addEventListener('click', () => updateZoom(0.1));
@@ -100,26 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
         document.getElementById('exportSvgBtn').addEventListener('click', exportSvg);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
-        
-        // Global listeners for linking mode
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') exitLinkingMode(); });
-        treeLayout.addEventListener('click', (e) => {
-            if (!linkingState.active) return;
-            const card = e.target.closest('.member-card');
-            if (card) {
-                const memberId = parseInt(card.dataset.id);
-                if (linkingState.from) {
-                    completeLink(memberId);
-                } else {
-                    exitLinkingMode();
-                    enterLinkingMode(memberId, 'Spouse');
-                }
-            }
-        });
     }
 
     function createFloatingLeaves() {
         const leavesContainer = document.getElementById('leaves-container');
+        if (!leavesContainer) return;
         for (let i = 0; i < 15; i++) {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
@@ -140,10 +144,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- CORE LOGIC: FILTERING, FOCUSING, LINKING ---
+    // --- CORE LOGIC: FILTERING, FOCUSING, CLEARING ---
+    function clearAllData() {
+        if (confirm("Are you sure you want to clear all family data? This action cannot be undone.")) {
+            familyData.members = [];
+            familyData.connections = [];
+            applyFilters();
+            showToast("All data has been cleared.");
+        }
+    }
+
     function handleSearch(e) {
         const member = familyData.members.find(m => m.name.toLowerCase() === e.target.value.toLowerCase());
-        if (member) focusOnMember(member.id);
+        if (member) {
+            focusOnMember(member.id);
+        }
     }
 
     function focusOnMember(memberId) {
@@ -168,60 +183,28 @@ document.addEventListener('DOMContentLoaded', () => {
             (level === 'all' || member.generation == level)
         );
         renderTree(currentViewMembers);
+        populateRelationshipManager();
     }
     
     function resetAllFilters() {
         sideFilter.value = 'all';
         levelFilter.value = 'all';
         searchInput.value = '';
-        currentViewMembers = familyData.members;
-        renderTree(currentViewMembers);
+        applyFilters();
         showToast("Filters reset.");
     }
-
-    function enterLinkingMode(fromId, type) {
-        linkingState = { active: true, from: fromId, type };
-        const fromMember = familyData.members.find(m => m.id === fromId);
-        const message = fromId 
-            ? `Linking a ${type} to <strong>${fromMember.name}</strong>.<br><small>Click another person, or press Esc to cancel.</small>`
-            : `<strong>Select the first person to link.</strong><br><small>Press Esc to cancel.</small>`;
-        appOverlay.innerHTML = message;
-        appOverlay.classList.add('linking-active');
-        document.body.style.cursor = 'crosshair';
-        if (fromId) {
-            document.querySelector(`.member-card[data-id='${fromId}']`)?.classList.add('highlight-link');
-        }
-    }
-
-    function exitLinkingMode() {
-        linkingState = { active: false, from: null, type: null };
-        appOverlay.classList.remove('linking-active');
-        document.body.style.cursor = 'default';
-        document.querySelectorAll('.highlight-link').forEach(el => el.classList.remove('highlight-link'));
-    }
-
-    function completeLink(toId) {
-        if (!linkingState.active || linkingState.from === toId) return exitLinkingMode();
-        const fromId = linkingState.from;
-        let members = [fromId, toId], type = 'Spouse';
-        
-        if (linkingState.type === 'Parent') {
-            type = 'Parent-Child';
-            const childGen = familyData.members.find(m => m.id === fromId).generation;
-            const parentGen = familyData.members.find(m => m.id === toId).generation;
-            if (parentGen < childGen) {
-                members = [toId, fromId]; // Parent ID must be first in Parent-Child connection
-            } else {
-                showToast("A parent must be from an older generation.");
-                return exitLinkingMode();
-            }
-        }
-        exitLinkingMode();
-        openRelationshipModal(null, { members, type });
-    }
-
+    
     // --- RENDERING ENGINE ---
     function renderTree(membersToRender) {
+        if (!membersToRender || membersToRender.length === 0) {
+            treeLayout.innerHTML = '';
+            connectionsSVG.innerHTML = '';
+            annotationsContainer.innerHTML = '';
+            emptyStateMessage.style.display = 'block';
+            return;
+        }
+        
+        emptyStateMessage.style.display = 'none';
         treeLayout.innerHTML = '';
         const generations = [...new Set(membersToRender.map(m => m.generation))].sort((a,b) => a - b);
 
@@ -297,8 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 [midX, midY] = [(fromX + toX) / 2, fromY];
                 path.classList.add(conn.status === 'Divorced' ? 'spouse-divorced' : 'spouse-married');
             } else if (conn.type === 'Parent-Child') {
-                const pRect = fromCard.getBoundingClientRect(); // fromId is parent
-                const cRect = toCard.getBoundingClientRect();   // toId is child
+                const pRect = fromCard.getBoundingClientRect();
+                const cRect = toCard.getBoundingClientRect();
                 const fromX = (pRect.left + pRect.right) / 2 - containerRect.left;
                 const fromY = pRect.bottom - containerRect.top;
                 const toX = (cRect.left + cRect.right) / 2 - containerRect.left;
@@ -323,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const icon = document.createElement('div');
             icon.className = 'annotation-icon';
             icon.dataset.id = conn.id;
-            icon.innerHTML = `<i class="fa-solid ${conn.annotation ? 'fa-info' : 'fa-plus'}"></i><div class="annotation-tooltip">${conn.annotation || 'Click to add note'}</div>`;
+            icon.innerHTML = `<i class="fa-solid ${conn.annotation ? 'fa-info' : 'fa-plus'}"></i><div class="annotation-tooltip">${conn.annotation || 'Click to edit'}</div>`;
             icon.style.left = `${midX}px`;
             icon.style.top = `${midY}px`;
             icon.addEventListener('click', (e) => { e.stopPropagation(); openRelationshipModal(e.currentTarget.dataset.id); });
@@ -332,40 +315,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MODAL & EDITING LOGIC ---
-    function openEditModal(id) {
+    function openEditModal(id = null) {
         editForm.reset();
         tagsInputContainer.querySelectorAll('.tag-item').forEach(t => t.remove());
-        const member = familyData.members.find(m => m.id === id);
-        if (!member) return;
         
-        editModal.querySelector('#modal-title').textContent = 'Edit Family Member';
-        memberIdInput.value = member.id;
-        Object.keys(member).forEach(key => {
-            const input = editForm.querySelector(`#${key}`);
-            if (input) input.value = member[key] || '';
-        });
-        (member.tags || []).forEach(createTagElement);
-        
-        if(member.avatar) {
-            modalAvatarImg.src = member.avatar;
-            modalAvatarImg.style.display = 'block';
-            modalAvatarInitials.style.display = 'none';
+        if (id) {
+            const member = familyData.members.find(m => m.id === id);
+            if (!member) return;
+            editModal.querySelector('#modal-title').textContent = 'Edit Family Member';
+            memberIdInput.value = member.id;
+            Object.keys(member).forEach(key => {
+                const input = editForm.querySelector(`#${key}`);
+                if (input) input.value = member[key] || '';
+            });
+            (member.tags || []).forEach(createTagElement);
+            if(member.avatar) {
+                modalAvatarImg.src = member.avatar;
+                modalAvatarImg.style.display = 'block';
+                modalAvatarInitials.style.display = 'none';
+            } else {
+                 modalAvatarInitials.textContent = getInitials(member.name);
+                 modalAvatarImg.src = '';
+                 modalAvatarImg.style.display = 'none';
+                 modalAvatarInitials.style.display = 'flex';
+            }
         } else {
-             modalAvatarInitials.textContent = getInitials(member.name);
-             modalAvatarImg.src = '';
-             modalAvatarImg.style.display = 'none';
-             modalAvatarInitials.style.display = 'flex';
+            editModal.querySelector('#modal-title').textContent = 'Add New Family Member';
+            memberIdInput.value = '';
+            modalAvatarInitials.textContent = '?';
+            modalAvatarImg.src = '';
+            modalAvatarImg.style.display = 'none';
+            modalAvatarInitials.style.display = 'flex';
         }
-        
-        const linksDisplay = document.getElementById('family-links-display');
-        const parents = familyData.connections
-            .filter(c => c.type === 'Parent-Child' && c.members[1] === id)
-            .map(c => familyData.members.find(m => m.id === c.members[0]));
-        linksDisplay.innerHTML = parents.length 
-            ? parents.map(p => `<div class="link-item"><strong>Parent:</strong> ${p.name}</div>`).join('')
-            : '<div class="link-item">No parents linked.</div>';
-        
-        document.getElementById('link-parent-btn').onclick = () => { closeModal(); enterLinkingMode(id, 'Parent'); };
         editModal.classList.add('visible');
     }
 
@@ -373,19 +354,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveMember() {
         const id = parseInt(memberIdInput.value);
-        const member = familyData.members.find(m => m.id === id);
-        if (member) {
-            member.name = document.getElementById('name').value;
-            member.relationship = document.getElementById('relationship').value;
-            member.birthDate = document.getElementById('birthDate').value;
-            member.deathDate = document.getElementById('deathDate').value;
-            member.description = document.getElementById('description').value;
-            member.avatar = (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : member.avatar;
-            member.tags = Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent);
+        if (id) {
+            const member = familyData.members.find(m => m.id === id);
+            Object.assign(member, {
+                name: document.getElementById('name').value,
+                relationship: document.getElementById('relationship').value,
+                birthDate: document.getElementById('birthDate').value,
+                deathDate: document.getElementById('deathDate').value,
+                description: document.getElementById('description').value,
+                avatar: (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : member.avatar,
+                tags: Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent)
+            });
             showToast(`${member.name}'s details saved!`);
+        } else {
+            const newMember = {
+                id: Date.now(),
+                name: document.getElementById('name').value || 'New Member',
+                relationship: document.getElementById('relationship').value || 'Person',
+                birthDate: document.getElementById('birthDate').value,
+                deathDate: document.getElementById('deathDate').value,
+                description: document.getElementById('description').value,
+                tags: Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent),
+                avatar: (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : null,
+                generation: 3, side: 'ego'
+            };
+            familyData.members.push(newMember);
+            populateSearchDatalist();
+            showToast(`${newMember.name} added to the tree!`);
         }
         closeModal();
-        applyFilters(); // Re-render with current filters
+        applyFilters();
     }
     
     function createTagElement(tag) {
@@ -417,26 +415,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function openRelationshipModal(connId = null, prefillData = null) {
+    function openRelationshipModal(connId = null) {
         const modal = document.getElementById('relationship-modal');
-        const form = document.getElementById('relationship-form');
+        const form = document.getElementById('relationship-form-modal');
         form.reset();
         
-        if (connId) {
-            const conn = familyData.connections.find(c => c.id === connId);
-            document.getElementById('relationshipId').value = conn.id;
-            document.getElementById('relationshipType').value = conn.type;
-            document.getElementById('relationshipStatus').value = conn.status;
-            document.getElementById('relationshipAnnotation').value = conn.annotation || '';
-            document.getElementById('relationship-modal-title').textContent = "Edit Relationship";
-            document.getElementById('delete-relationship-btn').style.display = 'inline-flex';
-        } else if (prefillData) {
-            document.getElementById('relationshipId').value = '';
-            document.getElementById('relationshipType').value = prefillData.type;
-            document.getElementById('relationshipId').dataset.members = JSON.stringify(prefillData.members);
-            document.getElementById('relationship-modal-title').textContent = "Create New Relationship";
-            document.getElementById('delete-relationship-btn').style.display = 'none';
-        }
+        const conn = familyData.connections.find(c => c.id === connId);
+        if (!conn) return;
+
+        document.getElementById('relationshipId').value = conn.id;
+        document.getElementById('relationshipAnnotation').value = conn.annotation || '';
+        document.getElementById('relationship-modal-title').textContent = "Edit Relationship Annotation";
+        
         modal.classList.add('visible');
     }
 
@@ -444,20 +434,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveRelationship() {
         const id = document.getElementById('relationshipId').value;
-        const type = document.getElementById('relationshipType').value;
-        const status = document.getElementById('relationshipStatus').value;
         const annotation = document.getElementById('relationshipAnnotation').value;
 
-        if (id) {
-            const conn = familyData.connections.find(c => c.id === id);
-            Object.assign(conn, { type, status, annotation });
-        } else {
-            const members = JSON.parse(document.getElementById('relationshipId').dataset.members);
-            familyData.connections.push({
-                id: `c${Date.now()}`, members, type, status, annotation,
-                direct: type !== 'Spouse'
-            });
+        const conn = familyData.connections.find(c => c.id === id);
+        if (conn) {
+            conn.annotation = annotation;
         }
+        
         applyFilters();
         closeRelationshipModal();
     }
@@ -467,6 +450,76 @@ document.addEventListener('DOMContentLoaded', () => {
         familyData.connections = familyData.connections.filter(c => c.id !== id);
         applyFilters();
         closeRelationshipModal();
+    }
+
+    // --- SIDEBAR RELATIONSHIP MANAGER ---
+    function populateRelationshipManager() {
+        const fromSelect = document.getElementById('rel-from');
+        const toSelect = document.getElementById('rel-to');
+        const listContainer = document.getElementById('existing-relationships-list');
+        
+        const options = familyData.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        fromSelect.innerHTML = options;
+        toSelect.innerHTML = options;
+
+        listContainer.innerHTML = '';
+        familyData.connections.forEach(conn => {
+            const fromMember = familyData.members.find(m => m.id === conn.members[0]);
+            const toMember = familyData.members.find(m => m.id === conn.members[1]);
+            if (!fromMember || !toMember) return;
+            
+            const item = document.createElement('div');
+            item.className = 'relationship-item';
+            let annotationHTML = conn.annotation ? `<div class="rel-annotation">'${conn.annotation}'</div>` : '';
+
+            item.innerHTML = `
+                <div>
+                    <span><strong>${fromMember.name}</strong> &harr; <strong>${toMember.name}</strong><br><small>${conn.type}</small></span>
+                    ${annotationHTML}
+                </div>
+                <div class="actions">
+                    <button data-id="${conn.id}" class="edit-rel" title="Edit Annotation"><i class="fa-solid fa-pencil"></i></button>
+                    <button data-id="${conn.id}" class="delete-rel" title="Delete Relationship"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+        
+        listContainer.querySelectorAll('.edit-rel').forEach(b => b.addEventListener('click', (e) => openRelationshipModal(e.currentTarget.dataset.id)));
+        listContainer.querySelectorAll('.delete-rel').forEach(b => b.addEventListener('click', (e) => {
+            if (confirm('Are you sure you want to delete this relationship?')) {
+                familyData.connections = familyData.connections.filter(c => c.id !== e.currentTarget.dataset.id);
+                applyFilters();
+            }
+        }));
+    }
+
+    function handleRelationshipForm(e) {
+        e.preventDefault();
+        const fromId = parseInt(document.getElementById('rel-from').value);
+        const toId = parseInt(document.getElementById('rel-to').value);
+        const type = document.getElementById('rel-type').value;
+
+        if (!fromId || !toId) return showToast("Please select two people.");
+        if (fromId === toId) return showToast("Cannot link a person to themselves.");
+        
+        let members = [fromId, toId];
+        if (type === 'Parent-Child') {
+            const fromGen = familyData.members.find(m => m.id === fromId)?.generation ?? -1;
+            const toGen = familyData.members.find(m => m.id === toId)?.generation ?? -1;
+            if(fromGen > toGen) members = [toId, fromId];
+            else if (fromGen === toGen) return showToast("Parents and children must be in different generations.");
+        }
+        
+        familyData.connections.push({
+            id: `c${Date.now()}`, members, type, 
+            status: type === 'Spouse' ? 'Married' : type, 
+            annotation: '',
+            direct: type !== 'Spouse'
+        });
+
+        showToast("Relationship added!");
+        applyFilters();
     }
 
     // --- UI CONTROLS: ZOOM, PAN, FULLSCREEN ---
@@ -511,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Generating ${format.toUpperCase()}...`);
         const tempClass = 'is-exporting';
         treeContainer.classList.add(tempClass);
-        drawConnections(); // Redraw might be needed if styles change
+        drawConnections();
         
         setTimeout(() => {
             html2canvas(treeContainer, { backgroundColor: null, scale: 2 }).then(canvas => {
@@ -549,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Generating SVG...');
         const treeNode = document.getElementById('tree-container');
         htmlToImage.toSvg(treeNode, {
-            filter: (node) => node.tagName !== 'BUTTON' // Optional: remove edit buttons from export
+            filter: (node) => node.tagName !== 'BUTTON'
         }).then((dataUrl) => {
             const link = document.createElement('a');
             link.download = 'family-tree.svg';
