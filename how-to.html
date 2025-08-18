@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How To - The Family Tree Project</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="static-page">
+    <div class="leaves-container"></div>
+    <header class="app-header">
+         <div class="header-left">
+             <a href="index.html" class="logo">
+                <i class="fa-solid fa-tree"></i>
+                <span>The Family Tree Project</span>
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="index.html">Home</a>
+            <a href="how-to.html" class="active">How To</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="header-actions" style="visibility: hidden;"></div> </header>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <h3>Table of Contents</h3>
+            <nav id="toc-nav">
+                <a href="#getting-started" class="active">Getting Started</a>
+                <a href="#navigating">Navigating the Tree</a>
+                <a href="#editing-members">Editing a Person</a>
+                <a href="#managing-relationships">Managing Relationships</a>
+                <a href="#using-controls">Using the Controls</a>
+                <a href="#exporting">Exporting & Saving</a>
+            </nav>
+        </aside>
+    
+        <main class="doc-content">
+            <section id="getting-started" class="doc-section">
+                <h2>Getting Started</h2>
+                <p>Welcome! This guide will walk you through all the features of the application. The project loads with a sample family tree to demonstrate its capabilities. To start fresh, simply click the red trash can icon (<i class="fa-solid fa-trash"></i>) at the bottom right. This will clear the canvas and present a large green plus button to add your first family member.</p>
+                <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The "Clear Data" button and the "Get Started" prompt on a blank canvas.</figcaption>
+                </div>
+            </section>
+
+            <section id="navigating" class="doc-section">
+                <h2>Navigating the Tree</h2>
+                <p>Your family tree is an interactive canvas. You can move around it easily:</p>
+                <ul>
+                    <li><strong>Pan:</strong> Click and drag on any empty space on the background to move the entire tree around.</li>
+                    <li><strong>Zoom:</strong> Use the <strong>+/-</strong> buttons in the bottom-right corner to zoom in and out. You can also use your mouse wheel for more precise control.</li>
+                    <li><strong>Reset View:</strong> Click the circular arrow button (<i class="fa-solid fa-arrows-rotate"></i>) to reset the zoom, position, and any active filters to the default state.</li>
+                    <li><strong>Fullscreen:</strong> Use the expand icon (<i class="fa-solid fa-expand"></i>) to enter a distraction-free fullscreen mode.</li>
+                </ul>
+                <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The main canvas view with the UI controls highlighted in the bottom right.</figcaption>
+                </div>
+            </section>
+
+            <section id="editing-members" class="doc-section">
+                <h2>Editing a Person</h2>
+                <p>Each person on the tree is represented by a card. To edit someone's details:</p>
+                <ul>
+                    <li><strong>Open the Editor:</strong> Simply <strong>double-click</strong> on any person's card, or hover over it and click the pencil icon (<i class="fa-solid fa-pencil"></i>).</li>
+                    <li><strong>Update Information:</strong> In the pop-up window, you can change their name, assign a role from the dropdown, set birth/death dates, and add personal stories.</li>
+                    <li><strong>Change Photo:</strong> Click the camera icon on the profile picture to upload a new image from your device.</li>
+                    <li><strong>Add Tags:</strong> Use the tags field to add descriptive labels like "Military," "Artist," or "Immigrant."</li>
+                </ul>
+                <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The member edit modal showing all available fields.</figcaption>
+                </div>
+            </section>
+            
+            <section id="managing-relationships" class="doc-section">
+                <h2>Managing Relationships</h2>
+                <p>The connections between people are managed in the Controls sidebar, providing a powerful, centralized way to build your tree.</p>
+                <ul>
+                    <li><strong>Open Controls:</strong> Click the menu icon (<i class="fa-solid fa-sliders"></i>) in the header to open the sidebar.</li>
+                    <li><strong>Create a Link:</strong> In the "Relationship Manager" section, select two people from the "From" and "To" dropdowns, choose the relationship type, and click "Create Link."</li>
+                    <li><strong>Edit/Delete:</strong> Existing relationships are listed below the form. Use the pencil (<i class="fa-solid fa-pencil"></i>) and trash (<i class="fa-solid fa-trash"></i>) icons to edit or remove any connection.</li>
+                </ul>
+                 <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The Relationship Manager section in the Controls sidebar.</figcaption>
+                </div>
+            </section>
+            
+            <section id="using-controls" class="doc-section">
+                <h2>Using the Controls</h2>
+                <p>The "Controls" button (<i class="fa-solid fa-sliders"></i>) in the header opens the sidebar with powerful tools:</p>
+                <ul>
+                    <li><strong>Focus Search:</strong> The search bar in the main menu lets you quickly find and center the view on a specific person and their immediate family.</li>
+                    <li><strong>Filters:</strong> Use the "Family Side" and "Generation" dropdowns to show only specific parts of your family tree.</li>
+                    <li><strong>Toggle Lines:</strong> Use the "Show Lines" switch to hide or show all the connecting branches for a cleaner view.</li>
+                </ul>
+                <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The various filter and view options available in the sidebar.</figcaption>
+                </div>
+            </section>
+
+            <section id="exporting" class="doc-section">
+                <h2>Exporting & Saving</h2>
+                <p>You can save and share your work in various formats from the "Export Options" dropdown in the Controls sidebar.</p>
+                <ul>
+                    <li><strong>PNG/PDF/SVG:</strong> These options create a high-quality visual snapshot of your family tree, perfect for printing, sharing, or embedding elsewhere.</li>
+                    <li><strong>CSV:</strong> This option exports all the raw data (names, dates, notes) into a spreadsheet format, which is great for backups or data analysis.</li>
+                </ul>
+                <div class="image-placeholder-wrapper">
+                    <div class="image-placeholder">Your Screenshot Here</div>
+                    <figcaption>The "Export Options" dropdown menu in the Controls sidebar.</figcaption>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('#toc-nav a');
+            const sections = document.querySelectorAll('.doc-section');
+
+            function showSection(targetId) {
+                // Hide all sections
+                sections.forEach(section => {
+                    section.classList.remove('is-active');
+                });
+                
+                // Remove active class from all links
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+
+                // Show the target section
+                const targetSection = document.querySelector(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('is-active');
+                }
+                
+                // Add active class to the clicked link
+                const activeLink = document.querySelector(`#toc-nav a[href="${targetId}"]`);
+                if(activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+
+            // Add click event listeners to nav links
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    showSection(targetId);
+                });
+            });
+
+            // Show the first section by default on page load
+            showSection('#getting-started');
+        });
+    </script>
+</body>
+</html>
