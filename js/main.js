@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let scale = 1;
 
     // --- DOM ELEMENT REFERENCES ---
-    const appOverlay = document.getElementById('app-overlay');
     const treeLayout = document.getElementById('tree-layout');
     const memberCardTemplate = document.getElementById('member-card-template');
     const connectionsSVG = document.getElementById('tree-connections');
@@ -79,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('globalResetBtn').addEventListener('click', () => { resetView(); resetAllFilters(); });
         document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
         emptyStateMessage.addEventListener('click', () => openEditModal());
+        
+        // View Option Toggles
         document.getElementById('toggle-lines').addEventListener('change', (e) => {
             document.body.classList.toggle('hide-connections', !e.target.checked);
         });
@@ -88,9 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('toggle-annotations').addEventListener('change', (e) => {
             document.body.classList.toggle('hide-annotations', !e.target.checked);
         });
+        document.getElementById('toggle-extended').addEventListener('change', (e) => {
+            document.body.classList.toggle('hide-extended', !e.target.checked);
+        });
 
         // Relationship Manager in Sidebar
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
+        document.getElementById('search-relationships').addEventListener('input', handleRelationshipSearch);
 
         // Zoom, Pan, Fullscreen
         document.getElementById('zoomInBtn').addEventListener('click', () => updateZoom(0.1));
@@ -114,11 +119,34 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('delete-relationship-btn').addEventListener('click', deleteRelationship);
         document.querySelector('#relationship-modal .modal-close-btn').addEventListener('click', closeRelationshipModal);
 
-        // Export Buttons
+        // Data Management & Export Buttons
+        document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('json-file-input').click());
+        document.getElementById('json-file-input').addEventListener('change', importJson);
+        document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
         document.getElementById('exportPngBtn').addEventListener('click', exportPng);
         document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
         document.getElementById('exportSvgBtn').addEventListener('click', exportSvg);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+        
+        // Dropdown Menu Logic
+        document.querySelectorAll('.dropdown-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = button.closest('.dropdown');
+                document.querySelectorAll('.dropdown.is-active').forEach(openDropdown => {
+                    if (openDropdown !== dropdown) openDropdown.classList.remove('is-active');
+                });
+                dropdown.classList.toggle('is-active');
+            });
+        });
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown.is-active').forEach(dropdown => {
+                    dropdown.classList.remove('is-active');
+                });
+            }
+        });
     }
 
     function createFloatingLeaves() {
@@ -273,12 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (conn.type === 'Spouse') {
                 const fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
-                const toY = (toRect.top + toRect.bottom) / 2 - containerRect.top;
                 const fromX = fromRect.right - containerRect.left;
                 const toX = toRect.left - containerRect.left;
-                d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${toY}, ${toX} ${toY}`;
+                d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${fromY}, ${toX} ${fromY}`;
                 [midX, midY] = [(fromX + toX) / 2, fromY];
-                path.classList.add(conn.status === 'Divorced' ? 'spouse-divorced' : 'spouse-married');
+                path.classList.add('spouse-married');
             } else if (conn.type === 'Parent-Child') {
                 const pRect = fromCard.getBoundingClientRect();
                 const cRect = toCard.getBoundingClientRect();
@@ -292,12 +319,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 path.classList.add('parent-child');
             } else if (conn.type === 'Sibling') {
                 const fromY = fromRect.top - containerRect.top;
-                const toY = toRect.top - containerRect.top;
                 const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
                 const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
-                d = `M ${fromX} ${fromY} C ${fromX} ${fromY - 40}, ${toX} ${toY - 40}, ${toX} ${toY}`;
+                d = `M ${fromX} ${fromY} C ${fromX} ${fromY - 40}, ${toX} ${fromY - 40}, ${toX} ${fromY}`;
                 [midX, midY] = [(fromX + toX) / 2, fromY - 30];
                 path.classList.add('sibling');
+            } else if (conn.type === 'Extended') {
+                const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
+                const fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
+                const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
+                const toY = (toRect.top + toRect.bottom) / 2 - containerRect.top;
+                d = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+                [midX, midY] = [(fromX + toX) / 2, (fromY + toY) / 2];
+                path.classList.add('extended-family');
             }
 
             path.setAttribute('d', d);
@@ -306,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const icon = document.createElement('div');
             icon.className = 'annotation-icon';
             icon.dataset.id = conn.id;
-            icon.innerHTML = `<i class="fa-solid ${conn.annotation ? 'fa-info' : 'fa-plus'}"></i><div class="annotation-tooltip">${conn.annotation || 'Click to edit'}</div>`;
+            icon.innerHTML = `<i class="fa-solid ${conn.annotation ? 'fa-info' : 'fa-plus'}"></i><div class="annotation-tooltip">${conn.annotation || 'Click to add note'}</div>`;
             icon.style.left = `${midX}px`;
             icon.style.top = `${midY}px`;
             icon.addEventListener('click', (e) => { e.stopPropagation(); openRelationshipModal(e.currentTarget.dataset.id); });
@@ -424,8 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!conn) return;
 
         document.getElementById('relationshipId').value = conn.id;
-        document.getElementById('relationshipAnnotation').value = conn.annotation || '';
-        document.getElementById('relationship-modal-title').textContent = "Edit Relationship Annotation";
+        document.getElementById('relationshipNote').value = conn.annotation || '';
+        document.getElementById('relationship-modal-title').textContent = "Edit Relationship Note";
         
         modal.classList.add('visible');
     }
@@ -434,11 +468,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveRelationship() {
         const id = document.getElementById('relationshipId').value;
-        const annotation = document.getElementById('relationshipAnnotation').value;
+        const note = document.getElementById('relationshipNote').value;
 
         const conn = familyData.connections.find(c => c.id === id);
         if (conn) {
-            conn.annotation = annotation;
+            conn.annotation = note;
         }
         
         applyFilters();
@@ -447,9 +481,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function deleteRelationship() {
         const id = document.getElementById('relationshipId').value;
-        familyData.connections = familyData.connections.filter(c => c.id !== id);
-        applyFilters();
-        closeRelationshipModal();
+        if (confirm('Are you sure you want to delete this relationship? This will only remove the note, not the link.')) {
+            const conn = familyData.connections.find(c => c.id === id);
+            if(conn) conn.annotation = '';
+            applyFilters();
+            closeRelationshipModal();
+        }
     }
 
     // --- SIDEBAR RELATIONSHIP MANAGER ---
@@ -458,7 +495,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const toSelect = document.getElementById('rel-to');
         const listContainer = document.getElementById('existing-relationships-list');
         
-        const options = familyData.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        const members = familyData.members.sort((a, b) => a.name.localeCompare(b.name));
+        const options = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
         fromSelect.innerHTML = options;
         toSelect.innerHTML = options;
 
@@ -470,15 +508,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const item = document.createElement('div');
             item.className = 'relationship-item';
-            let annotationHTML = conn.annotation ? `<div class="rel-annotation">'${conn.annotation}'</div>` : '';
+            item.dataset.names = `${fromMember.name.toLowerCase()} ${toMember.name.toLowerCase()}`;
+            let statusHTML = conn.status ? `<div class="rel-status">'${conn.status}'</div>` : '';
 
             item.innerHTML = `
                 <div>
                     <span><strong>${fromMember.name}</strong> &harr; <strong>${toMember.name}</strong><br><small>${conn.type}</small></span>
-                    ${annotationHTML}
+                    ${statusHTML}
                 </div>
                 <div class="actions">
-                    <button data-id="${conn.id}" class="edit-rel" title="Edit Annotation"><i class="fa-solid fa-pencil"></i></button>
+                    <button data-id="${conn.id}" class="edit-rel" title="Edit Note"><i class="fa-solid fa-pencil"></i></button>
                     <button data-id="${conn.id}" class="delete-rel" title="Delete Relationship"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
@@ -487,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         listContainer.querySelectorAll('.edit-rel').forEach(b => b.addEventListener('click', (e) => openRelationshipModal(e.currentTarget.dataset.id)));
         listContainer.querySelectorAll('.delete-rel').forEach(b => b.addEventListener('click', (e) => {
-            if (confirm('Are you sure you want to delete this relationship?')) {
+            if (confirm('Are you sure you want to delete this entire relationship link?')) {
                 familyData.connections = familyData.connections.filter(c => c.id !== e.currentTarget.dataset.id);
                 applyFilters();
             }
@@ -499,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fromId = parseInt(document.getElementById('rel-from').value);
         const toId = parseInt(document.getElementById('rel-to').value);
         const type = document.getElementById('rel-type').value;
+        const status = document.getElementById('rel-status').value;
 
         if (!fromId || !toId) return showToast("Please select two people.");
         if (fromId === toId) return showToast("Cannot link a person to themselves.");
@@ -512,14 +552,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         familyData.connections.push({
-            id: `c${Date.now()}`, members, type, 
-            status: type === 'Spouse' ? 'Married' : type, 
+            id: `c${Date.now()}`, members, type, status, 
             annotation: '',
-            direct: type !== 'Spouse'
+            direct: type !== 'Spouse' && type !== 'Extended'
         });
 
         showToast("Relationship added!");
         applyFilters();
+    }
+
+    function handleRelationshipSearch(e) {
+        const query = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('#existing-relationships-list .relationship-item');
+        items.forEach(item => {
+            const names = item.dataset.names;
+            if (names.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     // --- UI CONTROLS: ZOOM, PAN, FULLSCREEN ---
@@ -559,7 +611,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- IMPORT / EXPORT FEATURES ---
+    // --- DATA MANAGEMENT & EXPORT ---
+    function exportJson() {
+        const dataStr = JSON.stringify(familyData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', 'family-tree-data.json');
+        linkElement.click();
+        showToast('JSON data exported.');
+    }
+
+    function importJson(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.members && importedData.connections) {
+                    familyData = importedData;
+                    populateSearchDatalist();
+                    resetAllFilters();
+                    showToast('Family data imported successfully!');
+                } else {
+                    showToast('Error: Invalid JSON file format.');
+                }
+            } catch (error) {
+                showToast('Error parsing JSON file.');
+                console.error("JSON Parse Error:", error);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
     function captureTree(callback, format) {
         showToast(`Generating ${format.toUpperCase()}...`);
         const tempClass = 'is-exporting';
