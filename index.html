@@ -43,56 +43,60 @@
             </div>
             <div class="control-section">
                 <strong class="control-title">View Options</strong>
-                 <div class="toggle-group">
-                    <label for="toggle-lines">Show Lines</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggle-lines" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="toggle-group">
-                    <label for="toggle-roles">Show Role Titles</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggle-roles" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="toggle-group">
-                    <label for="toggle-annotations">Show Annotations</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggle-annotations" checked>
-                        <span class="slider"></span>
-                    </label>
+                 <div class="toggle-group"><label for="toggle-lines">Show Connection Lines</label><label class="toggle-switch"><input type="checkbox" id="toggle-lines" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-roles">Show Relationship Roles</label><label class="toggle-switch"><input type="checkbox" id="toggle-roles" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-annotations">Show Relationship Notes</label><label class="toggle-switch"><input type="checkbox" id="toggle-annotations" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-extended">Show Extended Family</label><label class="toggle-switch"><input type="checkbox" id="toggle-extended" checked><span class="slider"></span></label></div>
+                <div class="legend">
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent/Child</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--blue);"></span>Sibling</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--purple-extended);"></span>Extended</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark); border-radius: 0;"></span>Role (on card)</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--brown);"></span>Note (on line)</div>
                 </div>
             </div>
             <div class="control-section" id="relationship-manager">
                 <strong class="control-title">Relationship Manager</strong>
                 <form id="relationship-form-sidebar">
-                    <div class="filter-group">
-                        <label for="rel-from">From</label>
-                        <select id="rel-from"></select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="rel-to">To</label>
-                        <select id="rel-to"></select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="rel-type">As</label>
+                    <div class="filter-group"><label for="rel-from">From</label><select id="rel-from"></select></div>
+                    <div class="filter-group"><label for="rel-to">To</label><select id="rel-to"></select></div>
+                    <div class="filter-group"><label for="rel-type">Relationship Type</label>
                         <select id="rel-type">
                              <option value="Spouse">Spouse</option>
                              <option value="Parent-Child">Parent-Child</option>
                              <option value="Sibling">Sibling</option>
+                             <option value="Extended">Extended</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label for="rel-status">Relationship Status</label>
+                        <select id="rel-status">
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Partner">Partner</option>
+                            <option value="Engaged">Engaged</option>
+                            <option value="Separated">Separated</option>
+                            <option value="Biological">Biological</option>
+                            <option value="Adopted">Adopted</option>
+                            <option value="Step-Relationship">Step-Relationship</option>
+                            <option value="1st Cousin">1st Cousin</option>
+                            <option value="2nd Cousin">2nd Cousin</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Link</button>
                 </form>
+                <div class="filter-group">
+                    <input type="search" id="search-relationships" placeholder="Search relationships...">
+                </div>
                 <div id="existing-relationships-list"></div>
             </div>
             <div class="control-section">
-                <strong class="control-title">Export</strong>
+                <strong class="control-title">Data Management</strong>
+                <button class="btn" id="importJsonBtn"><i class="fa-solid fa-upload"></i> Import JSON</button>
+                <input type="file" id="json-file-input" accept=".json" style="display: none;">
                 <div class="dropdown">
                     <button class="btn dropdown-btn"><i class="fa-solid fa-download"></i> Export Options <i class="fa-solid fa-chevron-down"></i></button>
                     <div class="dropdown-content">
+                        <a href="#" id="exportJsonBtn"><i class="fa-solid fa-file-code"></i> Export as JSON</a>
                         <a href="#" id="exportPngBtn"><i class="fa-solid fa-image"></i> Export as PNG</a>
                         <a href="#" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Export as PDF</a>
                         <a href="#" id="exportSvgBtn"><i class="fa-solid fa-file-code"></i> Export as SVG</a>
@@ -172,9 +176,9 @@
                 <form class="modal-main-form" id="edit-form">
                     <input type="hidden" id="memberId">
                     <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" required></div>
-                    <div class="form-group"><label for="relationship">Role Title</label>
+                    <div class="form-group"><label for="relationship">Relationship Role</label>
                         <select id="relationship">
-                            <option value="Son">Son</option><option value="Daughter">Daughter</option><option value="Father">Father</option><option value="Mother">Mother</option><option value="Grandfather">Grandfather</option><option value="Grandmother">Grandmother</option><option value="Great Grandfather">Great Grandfather</option><option value="Great Grandmother">Great Grandmother</option><option value="Husband">Husband</option><option value="Wife">Wife</option><option value="Partner">Partner</option><option value="Sibling">Sibling</option><option value="Uncle">Uncle</option><option value="Aunt">Aunt</option><option value="Cousin">Cousin</option><option value="Nephew">Nephew</option><option value="Niece">Niece</option>
+                            <option value="Son">Son</option><option value="Daughter">Daughter</option><option value="Father">Father</option><option value="Mother">Mother</option><option value="Step-Father">Step-Father</option><option value="Step-Mother">Step-Mother</option><option value="Grandfather">Grandfather</option><option value="Grandmother">Grandmother</option><option value="Husband">Husband</option><option value="Wife">Wife</option><option value="Partner">Partner</option><option value="Sibling">Sibling</option>
                         </select>
                     </div>
                     <div class="form-group"><label for="birthDate">Birth Date</label><input type="date" id="birthDate"></div>
@@ -197,15 +201,15 @@
     <div class="modal-overlay" id="relationship-modal">
         <div class="modal-content small">
             <div class="modal-header">
-                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship Annotation</h2>
+                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship Note</h2>
                 <button class="modal-close-btn">&times;</button>
             </div>
             <form id="relationship-form-modal">
                 <div class="modal-body">
                         <input type="hidden" id="relationshipId">
                         <div class="form-group full-width">
-                            <label for="relationshipAnnotation">Annotation / Note</label>
-                            <textarea id="relationshipAnnotation" rows="3"></textarea>
+                            <label for="relationshipNote">Relationship Note</label>
+                            <textarea id="relationshipNote" rows="3"></textarea>
                         </div>
                 </div>
                 <div class="modal-footer">
