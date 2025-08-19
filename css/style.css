@@ -6,6 +6,7 @@
     --brown: #8b4513;
     --orange: #ed8936;
     --blue: #4299e1;
+    --purple-extended: #a259ff;
     --text-dark: #2d3748;
     --text-light: #718096;
     --bg-card: #ffffff;
@@ -60,14 +61,16 @@ body { display: flex; flex-direction: column; background: linear-gradient(135deg
 .control-title { font-size: 0.9rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
 .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
 .filter-group label { font-weight: 600; font-size: 0.9rem; }
-.filter-group select { width: 100%; padding: 0.75rem; border-radius: var(--border-radius-ui); border: 1px solid var(--border-color); background-color: white; }
+.filter-group select, .filter-group input { width: 100%; padding: 0.75rem; border-radius: var(--border-radius-ui); border: 1px solid var(--border-color); background-color: white; }
 .sidebar-content .btn, .sidebar-content .dropdown-btn { width: 100%; justify-content: center; padding: 0.75rem; }
+
+/* Click-based Dropdown Menu */
 .dropdown { position: relative; width: 100%; }
 .dropdown-btn { display: flex; justify-content: space-between; align-items: center; }
-.dropdown-content { display: none; position: absolute; background-color: #f9f9f9; width: 100%; box-shadow: var(--shadow-lg); z-index: 1; border-radius: var(--border-radius-ui); overflow: hidden; padding: 0.5rem 0; margin-top: 0.25rem; }
+.dropdown-content { display: block; position: absolute; background-color: #f9f9f9; width: 100%; box-shadow: var(--shadow-lg); z-index: 10; border-radius: var(--border-radius-ui); overflow: hidden; padding: 0.5rem 0; margin-top: 0.25rem; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity 0.2s ease-out, transform 0.2s ease-out; }
+.dropdown.is-active .dropdown-content { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .dropdown-content a { color: black; padding: 0.75rem 1rem; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 600;}
 .dropdown-content a:hover { background-color: #f1f1f1; }
-.dropdown:hover .dropdown-content { display: block; }
 
 /* Toggle Switch UI */
 .toggle-group { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
@@ -108,10 +111,10 @@ input:checked + .slider:before { transform: translateX(22px); }
 /* Connections & Annotations */
 #tree-connections, #connection-annotations { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 #tree-connections path { fill: none; stroke-linecap: round; }
-#tree-connections path.spouse-married { stroke: var(--brown); stroke-width: 2.5px; }
-#tree-connections path.spouse-divorced { stroke: var(--brown); stroke-width: 2.5px; stroke-dasharray: 5, 5; }
+#tree-connections path.spouse-married, #tree-connections path.spouse-divorced { stroke: var(--brown); stroke-width: 2.5px; }
 #tree-connections path.parent-child { stroke: var(--green-dark); stroke-width: 3px; }
 #tree-connections path.sibling { stroke: var(--blue); stroke-width: 2px; }
+#tree-connections path.extended-family { stroke: var(--purple-extended); stroke-width: 2px; }
 .annotation-icon { position: absolute; width: 22px; height: 22px; background-color: var(--brown); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; pointer-events: all; transform: translate(-50%, -50%); box-shadow: var(--shadow-md); transition: transform 0.2s; }
 .annotation-icon:hover { transform: translate(-50%, -50%) scale(1.2); }
 .annotation-tooltip { position: absolute; bottom: 130%; left: 50%; background-color: var(--brown); color: white; padding: 0.5rem 1rem; border-radius: var(--border-radius-ui); font-size: 0.9rem; width: max-content; max-width: 200px; transform: translateX(-50%); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; z-index: 10; }
@@ -121,6 +124,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 body.hide-connections #tree-connections, body.hide-connections #connection-annotations { display: none; }
 body.hide-roles .member-relationship { display: none; }
 body.hide-annotations .annotation-icon { display: none; }
+body.hide-extended .extended-family { display: none; }
 
 /* Buttons & UI Controls */
 .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border: 1px solid var(--border-color); background-color: var(--bg-card); border-radius: var(--border-radius-ui); font-family: var(--font-family); font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
@@ -208,7 +212,12 @@ body.hide-annotations .annotation-icon { display: none; }
 .relationship-item:hover { background: #e2e8f0; }
 .relationship-item .actions button { background: none; border: none; cursor: pointer; color: var(--text-light); padding: 0.25rem; }
 .relationship-item .actions button:hover { color: var(--text-dark); }
-.relationship-item .rel-annotation { font-style: italic; color: var(--text-light); font-size: 0.8rem; padding-left: 0.5rem; margin-top: 0.25rem; display: block; }
+.relationship-item .rel-status { font-style: italic; color: var(--text-light); font-size: 0.8rem; padding-left: 0.5rem; margin-top: 0.25rem; display: block; }
+
+/* Legend in Sidebar */
+.legend { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; }
+.legend-item { display: flex; align-items: center; gap: 0.5rem; }
+.color-swatch { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
 
 /* Print & Export Styles */
 .tree-container.is-exporting .member-card { box-shadow: 0 0 0 2px #ccc !important; border: 2px solid transparent; }
