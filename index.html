@@ -22,70 +22,38 @@
         <div class="sidebar-content">
             <div class="control-section">
                 <strong class="control-title">Filters</strong>
-                <div class="filter-group">
-                    <label for="side-filter">Family Side</label>
-                    <select id="side-filter">
-                        <option value="all">All Sides</option>
-                        <option value="paternal">Paternal</option>
-                        <option value="maternal">Maternal</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="level-filter">Generation</label>
-                    <select id="level-filter">
-                        <option value="all">All Generations</option>
-                        <option value="0">Great-Grandparents</option>
-                        <option value="1">Grandparents</option>
-                        <option value="2">Parents</option>
-                        <option value="3">Current</option>
-                    </select>
-                </div>
+                <div class="filter-group"><input type="search" id="tag-filter" placeholder="Filter by tag..."></div>
+                <div class="filter-group"><label for="role-filter">Relationship Role</label><select id="role-filter"><option value="all">All Roles</option></select></div>
+                <div class="filter-group"><label for="link-filter">Relationship Link</label><select id="link-filter"><option value="all">All Links</option></select></div>
+                <div class="filter-group"><label for="status-filter">Relationship Status</label><select id="status-filter"><option value="all">All Statuses</option></select></div>
             </div>
             <div class="control-section">
                 <strong class="control-title">View Options</strong>
-                 <div class="toggle-group"><label for="toggle-lines">Show Connection Lines</label><label class="toggle-switch"><input type="checkbox" id="toggle-lines" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-links">Show Relationship Links</label><label class="toggle-switch"><input type="checkbox" id="toggle-links" checked><span class="slider"></span></label></div>
                 <div class="toggle-group"><label for="toggle-roles">Show Relationship Roles</label><label class="toggle-switch"><input type="checkbox" id="toggle-roles" checked><span class="slider"></span></label></div>
-                <div class="toggle-group"><label for="toggle-annotations">Show Relationship Notes</label><label class="toggle-switch"><input type="checkbox" id="toggle-annotations" checked><span class="slider"></span></label></div>
-                <div class="toggle-group"><label for="toggle-extended">Show Extended Family</label><label class="toggle-switch"><input type="checkbox" id="toggle-extended" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-notes">Show Relationship Notes</label><label class="toggle-switch"><input type="checkbox" id="toggle-notes" checked><span class="slider"></span></label></div>
                 <div class="legend">
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent/Child</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent-Child</div>
                     <div class="legend-item"><span class="color-swatch" style="background: var(--blue);"></span>Sibling</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--purple-extended);"></span>Extended</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark); border-radius: 0;"></span>Role (on card)</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--brown);"></span>Note (on line)</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--orange);"></span>Spouse</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--teal);"></span>Partner</div>
                 </div>
             </div>
             <div class="control-section" id="relationship-manager">
                 <strong class="control-title">Relationship Manager</strong>
                 <form id="relationship-form-sidebar">
                     <div class="filter-group"><label for="rel-from">From</label><select id="rel-from"></select></div>
+                    <div class="filter-group"><label for="rel-from-role">From's Relationship Role</label><select id="rel-from-role"></select></div>
                     <div class="filter-group"><label for="rel-to">To</label><select id="rel-to"></select></div>
-                    <div class="filter-group"><label for="rel-type">Relationship Type</label>
-                        <select id="rel-type">
-                             <option value="Spouse">Spouse</option>
-                             <option value="Parent-Child">Parent-Child</option>
-                             <option value="Sibling">Sibling</option>
-                             <option value="Extended">Extended</option>
-                        </select>
-                    </div>
-                    <div class="filter-group"><label for="rel-status">Relationship Status</label>
-                        <select id="rel-status">
-                            <option value="Married">Married</option>
-                            <option value="Divorced">Divorced</option>
-                            <option value="Partner">Partner</option>
-                            <option value="Engaged">Engaged</option>
-                            <option value="Separated">Separated</option>
-                            <option value="Biological">Biological</option>
-                            <option value="Adopted">Adopted</option>
-                            <option value="Step-Relationship">Step-Relationship</option>
-                            <option value="1st Cousin">1st Cousin</option>
-                            <option value="2nd Cousin">2nd Cousin</option>
-                        </select>
-                    </div>
+                    <div class="filter-group"><label for="rel-to-role">To's Relationship Role</label><select id="rel-to-role"></select></div>
+                    <div class="filter-group"><label for="rel-link">Relationship Link</label><select id="rel-link"></select></div>
+                    <div class="filter-group"><label for="rel-type">Relationship Type</label><select id="rel-type"></select></div>
+                    <div class="filter-group"><label for="rel-status">Relationship Status</label><select id="rel-status"></select></div>
+                    <div class="filter-group"><label for="rel-note">Relationship Note</label><textarea id="rel-note" rows="2"></textarea></div>
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Link</button>
                 </form>
                 <div class="filter-group">
-                    <input type="search" id="search-relationships" placeholder="Search relationships...">
+                    <input type="search" id="search-relationships" placeholder="Search existing links...">
                 </div>
                 <div id="existing-relationships-list"></div>
             </div>
@@ -115,7 +83,7 @@
                 </button>
                 <a href="index.html" class="logo">
                     <i class="fa-solid fa-tree"></i>
-                    <span>The Family Tree Project</span>
+                    <span class="logo-text">The Family Tree Project</span>
                 </a>
             </div>
             <nav class="main-nav">
@@ -126,11 +94,21 @@
             <div class="header-actions">
                 <div class="search-container">
                     <i class="fa-solid fa-search"></i>
-                    <input type="search" id="search-member" placeholder="Focus on a person..." list="member-names">
-                    <datalist id="member-names"></datalist>
+                    <input type="search" id="search-member" placeholder="Focus on a person..." autocomplete="off">
+                    <div id="search-results" class="search-results-container"></div>
                 </div>
+                <button class="ui-icon-btn mobile-only" id="mobile-nav-toggle">
+                    <i class="fa-solid fa-ellipsis-v"></i>
+                </button>
             </div>
         </header>
+
+        <div id="mobile-nav-overlay" class="mobile-nav">
+            <button id="mobile-nav-close" class="ui-icon-btn close-btn">&times;</button>
+            <a href="index.html">Home</a>
+            <a href="how-to.html">How To</a>
+            <a href="about.html">About</a>
+        </div>
 
         <main class="main-canvas" id="main-canvas">
             <div class="tree-container" id="tree-container">
@@ -176,11 +154,8 @@
                 <form class="modal-main-form" id="edit-form">
                     <input type="hidden" id="memberId">
                     <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" required></div>
-                    <div class="form-group"><label for="relationship">Relationship Role</label>
-                        <select id="relationship">
-                            <option value="Son">Son</option><option value="Daughter">Daughter</option><option value="Father">Father</option><option value="Mother">Mother</option><option value="Step-Father">Step-Father</option><option value="Step-Mother">Step-Mother</option><option value="Grandfather">Grandfather</option><option value="Grandmother">Grandmother</option><option value="Husband">Husband</option><option value="Wife">Wife</option><option value="Partner">Partner</option><option value="Sibling">Sibling</option>
-                        </select>
-                    </div>
+                    <div class="form-group"><label for="relationship">Relationship Role</label><select id="relationship"></select></div>
+                    <div class="form-group"><label for="status">Relationship Status</label><select id="status"></select></div>
                     <div class="form-group"><label for="birthDate">Birth Date</label><input type="date" id="birthDate"></div>
                     <div class="form-group"><label for="deathDate">Date of Passing (optional)</label><input type="date" id="deathDate"></div>
                     <div class="form-group full-width"><label for="description">Personal Story / Notes</label><textarea id="description" rows="3"></textarea></div>
@@ -201,19 +176,19 @@
     <div class="modal-overlay" id="relationship-modal">
         <div class="modal-content small">
             <div class="modal-header">
-                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship Note</h2>
+                <h2 class="modal-title" id="relationship-modal-title">Edit Relationship</h2>
                 <button class="modal-close-btn">&times;</button>
             </div>
             <form id="relationship-form-modal">
                 <div class="modal-body">
-                        <input type="hidden" id="relationshipId">
-                        <div class="form-group full-width">
-                            <label for="relationshipNote">Relationship Note</label>
-                            <textarea id="relationshipNote" rows="3"></textarea>
-                        </div>
+                    <input type="hidden" id="relationshipId">
+                    <div class="form-group full-width"><label for="relationshipLinkModal">Relationship Link</label><select id="relationshipLinkModal" disabled></select></div>
+                    <div class="form-group full-width"><label for="relationshipTypeModal">Relationship Type</label><select id="relationshipTypeModal"></select></div>
+                    <div class="form-group full-width"><label for="relationshipStatusModal">Relationship Status</label><select id="relationshipStatusModal"></select></div>
+                    <div class="form-group full-width"><label for="relationshipNoteModal">Relationship Note</label><textarea id="relationshipNoteModal" rows="3"></textarea></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="delete-relationship-btn">Delete</button>
+                    <button type="button" class="btn btn-danger" id="delete-relationship-btn">Delete Link</button>
                     <button type="button" class="btn" id="relationship-modal-cancel-btn">Cancel</button>
                     <button type="button" class="btn btn-primary" id="relationship-modal-save-btn">Save</button>
                 </div>
@@ -241,6 +216,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/main.js" defer></script>
 </body>
 </html>

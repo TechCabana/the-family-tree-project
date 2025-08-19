@@ -68,10 +68,9 @@
                 <h2>Editing a Person</h2>
                 <p>Each person on the tree is represented by a card. To edit someone's details:</p>
                 <ul>
-                    <li><strong>Open the Editor:</strong> Simply <strong>double-click</strong> on any person's card, or hover over it and click the pencil icon (<i class="fa-solid fa-pencil"></i>).</li>
-                    <li><strong>Update Information:</strong> In the pop-up window, you can change their name, assign a role from the dropdown, set birth/death dates, and add personal stories.</li>
-                    <li><strong>Change Photo:</strong> Click the camera icon on the profile picture to upload a new image from your device.</li>
-                    <li><strong>Add Tags:</strong> Use the tags field to add descriptive labels like "Military," "Artist," or "Immigrant."</li>
+                    <li><strong>Open the Editor:</strong> Simply <strong>double-click</strong> on any person's card.</li>
+                    <li><strong>Update Information:</strong> In the pop-up window, you can change their name, their personal **Relationship Status** (e.g., Single, Married), and assign their **Relationship Role** (e.g., Son, Mother). This role is the green text that appears on their card.</li>
+                    <li><strong>Change Photo & Add Tags:</strong> You can also upload a photo and add descriptive tags to categorize people.</li>
                 </ul>
                 <div class="image-placeholder-wrapper">
                     <div class="image-placeholder">Your Screenshot Here</div>
@@ -81,11 +80,10 @@
             
             <section id="managing-relationships" class="doc-section">
                 <h2>Managing Relationships</h2>
-                <p>The connections between people are managed in the Controls sidebar, providing a powerful, centralized way to build your tree.</p>
+                <p>Connections are managed in the Controls sidebar. This is where you define how two people are linked.</p>
                 <ul>
-                    <li><strong>Open Controls:</strong> Click the menu icon (<i class="fa-solid fa-sliders"></i>) in the header to open the sidebar.</li>
-                    <li><strong>Create a Link:</strong> In the "Relationship Manager" section, select two people from the "From" and "To" dropdowns, choose the relationship type, and click "Create Link."</li>
-                    <li><strong>Edit/Delete:</strong> Existing relationships are listed below the form. Use the pencil (<i class="fa-solid fa-pencil"></i>) and trash (<i class="fa-solid fa-trash"></i>) icons to edit or remove any connection.</li>
+                    <li><strong>Create a Link:</strong> In the "Relationship Manager," select two people. You can then also set a **Relationship Role** for each person in the link (e.g., setting one as "Father" and the other as "Son"). Then, define the connection using the dropdowns for **Relationship Link**, **Relationship Type**, and **Relationship Status**. You can also add an optional **Relationship Note**.</li>
+                    <li><strong>Edit/Delete:</strong> Existing relationships are listed below the form. Use the pencil (<i class="fa-solid fa-pencil"></i>) to edit the link's details in a pop-up, or the trash (<i class="fa-solid fa-trash"></i>) icon to remove the connection entirely.</li>
                 </ul>
                  <div class="image-placeholder-wrapper">
                     <div class="image-placeholder">Your Screenshot Here</div>
@@ -95,11 +93,11 @@
             
             <section id="using-controls" class="doc-section">
                 <h2>Using the Controls</h2>
-                <p>The "Controls" button (<i class="fa-solid fa-sliders"></i>) in the header opens the sidebar with powerful tools:</p>
+                <p>The "Controls" button (<i class="fa-solid fa-bars"></i>) in the header opens the sidebar with powerful tools:</p>
                 <ul>
                     <li><strong>Focus Search:</strong> The search bar in the main menu lets you quickly find and center the view on a specific person and their immediate family.</li>
-                    <li><strong>Filters:</strong> Use the "Family Side" and "Generation" dropdowns to show only specific parts of your family tree.</li>
-                    <li><strong>Toggle Lines:</strong> Use the "Show Lines" switch to hide or show all the connecting branches for a cleaner view.</li>
+                    <li><strong>Filters:</strong> Use the dropdowns to filter your tree by a person's Role, their Status, the type of Links connecting them, or by a specific Tag.</li>
+                    <li><strong>View Options:</strong> Use the toggle switches to independently show or hide the connection lines, the roles on the cards, and the notes on the lines. A legend is provided to explain the color coding.</li>
                 </ul>
                 <div class="image-placeholder-wrapper">
                     <div class="image-placeholder">Your Screenshot Here</div>
@@ -109,10 +107,10 @@
 
             <section id="exporting" class="doc-section">
                 <h2>Exporting & Saving</h2>
-                <p>You can save and share your work in various formats from the "Export Options" dropdown in the Controls sidebar.</p>
+                <p>You can save and share your work using the "Data Management" section in the Controls sidebar.</p>
                 <ul>
-                    <li><strong>PNG/PDF/SVG:</strong> These options create a high-quality visual snapshot of your family tree, perfect for printing, sharing, or embedding elsewhere.</li>
-                    <li><strong>CSV:</strong> This option exports all the raw data (names, dates, notes) into a spreadsheet format, which is great for backups or data analysis.</li>
+                    <li><strong>Import JSON:</strong> Load a previously saved family tree from a JSON file to continue your work.</li>
+                    <li><strong>Export Options:</strong> Save your tree in various formats. **JSON** is recommended for backing up and re-importing your data. PNG, PDF, and SVG create visual snapshots for printing or sharing. CSV exports the raw data to a spreadsheet.</li>
                 </ul>
                 <div class="image-placeholder-wrapper">
                     <div class="image-placeholder">Your Screenshot Here</div>
@@ -128,35 +126,24 @@
             const sections = document.querySelectorAll('.doc-section');
 
             function showSection(targetId) {
-                // Hide all sections
-                sections.forEach(section => {
-                    section.classList.remove('is-active');
-                });
+                sections.forEach(section => section.classList.remove('is-active'));
+                navLinks.forEach(link => link.classList.remove('active'));
                 
-                // Remove active class from all links
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                });
-
-                // Show the target section
                 const targetSection = document.querySelector(targetId);
                 if (targetSection) {
                     targetSection.classList.add('is-active');
                 }
                 
-                // Add active class to the clicked link
                 const activeLink = document.querySelector(`#toc-nav a[href="${targetId}"]`);
                 if(activeLink) {
                     activeLink.classList.add('active');
                 }
             }
 
-            // Add click event listeners to nav links
             navLinks.forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const targetId = this.getAttribute('href');
-                    showSection(targetId);
+                    showSection(this.getAttribute('href'));
                 });
             });
 

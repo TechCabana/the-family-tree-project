@@ -5,7 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE MANAGEMENT ---
     let familyData = JSON.parse(JSON.stringify(initialFamilyData));
     let currentViewMembers = [];
+    let currentViewConnections = [];
     let scale = 1;
+
+    // --- STATIC DATA FOR DROPDOWNS ---
+    const relationshipRoles = ["Son", "Daughter", "Father", "Mother", "Grandfather", "Grandmother", "Great-Grandfather", "Great-Grandmother", "Step-Father", "Step-Mother"];
+    const relationshipLinks = ["Parent-Child", "Spouse", "Partner", "Sibling"];
+    const relationshipStatuses = ["Married", "Engaged", "Separated", "Divorced", "Single"];
+    const linkStatuses = ["Married", "Divorced", "Partner", "Engaged", "Separated"];
+    const relationshipTypes = ["Biological", "Adopted", "Step-Relationship"];
 
     // --- DOM ELEMENT REFERENCES ---
     const treeLayout = document.getElementById('tree-layout');
@@ -15,8 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const treeContainer = document.getElementById('tree-container');
     const searchInput = document.getElementById('search-member');
     const memberDatalist = document.getElementById('member-names');
-    const sideFilter = document.getElementById('side-filter');
-    const levelFilter = document.getElementById('level-filter');
     const annotationsContainer = document.getElementById('connection-annotations');
     const zoomLevelDisplay = document.getElementById('zoom-level');
     const editModal = document.getElementById('edit-modal');
@@ -56,54 +62,59 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         addEventListeners();
         createFloatingLeaves();
-        applyFilters(); // Use applyFilters for the initial render
+        populateStaticDropdowns();
+        populateFilterDropdowns();
+        applyFilters(); 
+    }
+
+    function populateFilterDropdowns() {
+        document.getElementById('role-filter').innerHTML = '<option value="all">All Roles</option>' + relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
+        document.getElementById('link-filter').innerHTML = '<option value="all">All Links</option>' + relationshipLinks.map(l => `<option value="${l}">${l}</option>`).join('');
+        document.getElementById('status-filter').innerHTML = '<option value="all">All Statuses</option>' + relationshipStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+    
+    function populateStaticDropdowns() {
+        document.getElementById('relationship').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
+        document.getElementById('status').innerHTML = relationshipStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+        document.getElementById('rel-from-role').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
+        document.getElementById('rel-to-role').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
+        document.getElementById('rel-link').innerHTML = relationshipLinks.map(l => `<option value="${l}">${l}</option>`).join('');
+        document.getElementById('rel-type').innerHTML = relationshipTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+        document.getElementById('rel-status').innerHTML = linkStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
     // --- EVENT LISTENERS ---
     function addEventListeners() {
         const controlsBar = document.getElementById('controls-bar');
         
-        // Sidebar Toggle Buttons
-        document.getElementById('toggle-controls-btn').addEventListener('click', () => {
-            controlsBar.classList.add('is-open');
-        });
-        document.getElementById('close-controls-btn').addEventListener('click', () => {
-            controlsBar.classList.remove('is-open');
-        });
+        document.getElementById('toggle-controls-btn').addEventListener('click', () => controlsBar.classList.add('is-open'));
+        document.getElementById('close-controls-btn').addEventListener('click', () => controlsBar.classList.remove('is-open'));
 
-        // Top Bar & Global Controls
-        searchInput.addEventListener('change', handleSearch);
-        sideFilter.addEventListener('change', applyFilters);
-        levelFilter.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', handleSearchInput);
+        searchInput.addEventListener('focus', handleSearchInput);
+        searchInput.addEventListener('change', handleSearchSelection); 
+
+        document.getElementById('tag-filter').addEventListener('input', applyFilters);
+        document.getElementById('role-filter').addEventListener('change', applyFilters);
+        document.getElementById('link-filter').addEventListener('change', applyFilters);
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+
         document.getElementById('globalResetBtn').addEventListener('click', () => { resetView(); resetAllFilters(); });
         document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
         emptyStateMessage.addEventListener('click', () => openEditModal());
         
-        // View Option Toggles
-        document.getElementById('toggle-lines').addEventListener('change', (e) => {
-            document.body.classList.toggle('hide-connections', !e.target.checked);
-        });
-        document.getElementById('toggle-roles').addEventListener('change', (e) => {
-            document.body.classList.toggle('hide-roles', !e.target.checked);
-        });
-        document.getElementById('toggle-annotations').addEventListener('change', (e) => {
-            document.body.classList.toggle('hide-annotations', !e.target.checked);
-        });
-        document.getElementById('toggle-extended').addEventListener('change', (e) => {
-            document.body.classList.toggle('hide-extended', !e.target.checked);
-        });
+        document.getElementById('toggle-links').addEventListener('change', (e) => document.body.classList.toggle('hide-connections', !e.target.checked));
+        document.getElementById('toggle-roles').addEventListener('change', (e) => document.body.classList.toggle('hide-roles', !e.target.checked));
+        document.getElementById('toggle-notes').addEventListener('change', () => drawConnections(currentViewConnections));
 
-        // Relationship Manager in Sidebar
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
         document.getElementById('search-relationships').addEventListener('input', handleRelationshipSearch);
 
-        // Zoom, Pan, Fullscreen
         document.getElementById('zoomInBtn').addEventListener('click', () => updateZoom(0.1));
         document.getElementById('zoomOutBtn').addEventListener('click', () => updateZoom(-0.1));
         document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
         addPanControls();
 
-        // Member Edit Modal
         editModal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
         document.getElementById('modal-save-btn').addEventListener('click', saveMember);
@@ -113,13 +124,11 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarUploadInput.addEventListener('change', handleAvatarUpload);
         newTagInput.addEventListener('keydown', handleTagInput);
 
-        // Relationship Edit Modal
         document.getElementById('relationship-modal-save-btn').addEventListener('click', saveRelationship);
         document.getElementById('relationship-modal-cancel-btn').addEventListener('click', closeRelationshipModal);
         document.getElementById('delete-relationship-btn').addEventListener('click', deleteRelationship);
         document.querySelector('#relationship-modal .modal-close-btn').addEventListener('click', closeRelationshipModal);
 
-        // Data Management & Export Buttons
         document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('json-file-input').click());
         document.getElementById('json-file-input').addEventListener('change', importJson);
         document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
@@ -128,7 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('exportSvgBtn').addEventListener('click', exportSvg);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
         
-        // Dropdown Menu Logic
+        annotationsContainer.addEventListener('click', (e) => {
+            const note = e.target.closest('.connection-note');
+            if (note) {
+                openRelationshipModal(note.dataset.id);
+            }
+        });
+
         document.querySelectorAll('.dropdown-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -140,11 +155,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+        const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+        const mobileNavClose = document.getElementById('mobile-nav-close');
+
+        if(mobileNavToggle) {
+            mobileNavToggle.addEventListener('click', () => mobileNavOverlay.classList.add('is-open'));
+            mobileNavClose.addEventListener('click', () => mobileNavOverlay.classList.remove('is-open'));
+        }
+
         window.addEventListener('click', (e) => {
             if (!e.target.closest('.dropdown')) {
                 document.querySelectorAll('.dropdown.is-active').forEach(dropdown => {
                     dropdown.classList.remove('is-active');
                 });
+            }
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('search-results').classList.remove('is-visible');
             }
         });
     }
@@ -152,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createFloatingLeaves() {
         const leavesContainer = document.getElementById('leaves-container');
         if (!leavesContainer) return;
+        leavesContainer.innerHTML = '';
         for (let i = 0; i < 15; i++) {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
@@ -182,11 +210,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleSearch(e) {
+    function handleSearchSelection(e) { 
         const member = familyData.members.find(m => m.name.toLowerCase() === e.target.value.toLowerCase());
         if (member) {
             focusOnMember(member.id);
+            e.target.value = '';
+            document.getElementById('search-results').classList.remove('is-visible');
         }
+    }
+
+    function handleSearchInput(e) {
+        const query = e.target.value.toLowerCase();
+        const resultsContainer = document.getElementById('search-results');
+        
+        if (query.length < 1) {
+            resultsContainer.classList.remove('is-visible');
+            return;
+        }
+        const filteredMembers = familyData.members.filter(member => 
+            member.name.toLowerCase().includes(query)
+        );
+        renderSearchResults(filteredMembers);
+    }
+    
+    function renderSearchResults(results) {
+        const resultsContainer = document.getElementById('search-results');
+        resultsContainer.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `<div class="search-result-item">No results found</div>`;
+        } else {
+            results.forEach(member => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.dataset.id = member.id;
+                item.innerHTML = `${member.name} <small>(${member.relationship || ''})</small>`;
+                item.addEventListener('click', () => {
+                    focusOnMember(member.id);
+                    searchInput.value = '';
+                    resultsContainer.classList.remove('is-visible');
+                });
+                resultsContainer.appendChild(item);
+            });
+        }
+        resultsContainer.classList.add('is-visible');
     }
 
     function focusOnMember(memberId) {
@@ -198,32 +265,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.members.forEach(id => visibleMemberIds.add(id));
             }
         });
-        currentViewMembers = familyData.members.filter(m => visibleMemberIds.has(m.id));
-        renderTree(currentViewMembers);
+        
+        const membersToRender = familyData.members.filter(m => visibleMemberIds.has(m.id));
+        const connectionsToRender = familyData.connections.filter(c => c.members.every(id => visibleMemberIds.has(id)));
+
+        renderTree(membersToRender, connectionsToRender);
         showToast(`Focusing on ${focusedMember.name}'s immediate family.`);
     }
 
     function applyFilters() {
-        const side = sideFilter.value;
-        const level = levelFilter.value;
-        currentViewMembers = familyData.members.filter(member => 
-            (side === 'all' || member.side === side || member.side === 'ego') &&
-            (level === 'all' || member.generation == level)
-        );
-        renderTree(currentViewMembers);
+        const tagQuery = document.getElementById('tag-filter').value.toLowerCase();
+        const roleQuery = document.getElementById('role-filter').value;
+        const linkQuery = document.getElementById('link-filter').value;
+        const statusQuery = document.getElementById('status-filter').value;
+
+        let filteredMembers = familyData.members;
+
+        if (tagQuery) {
+            filteredMembers = filteredMembers.filter(m => m.tags && m.tags.some(tag => tag.toLowerCase().includes(tagQuery)));
+        }
+        if (roleQuery !== 'all') {
+            filteredMembers = filteredMembers.filter(m => m.relationship === roleQuery);
+        }
+        if (statusQuery !== 'all') {
+            filteredMembers = filteredMembers.filter(m => m.status === statusQuery);
+        }
+        
+        const filteredMemberIds = new Set(filteredMembers.map(m => m.id));
+
+        let filteredConnections = familyData.connections;
+        if (linkQuery !== 'all') {
+            filteredConnections = filteredConnections.filter(conn => conn.link === linkQuery);
+        }
+
+        currentViewConnections = filteredConnections.filter(conn => conn.members.every(id => filteredMemberIds.has(id)));
+        currentViewMembers = filteredMembers;
+        
+        renderTree(currentViewMembers, currentViewConnections);
         populateRelationshipManager();
     }
     
     function resetAllFilters() {
-        sideFilter.value = 'all';
-        levelFilter.value = 'all';
+        document.getElementById('tag-filter').value = '';
+        document.getElementById('role-filter').value = 'all';
+        document.getElementById('link-filter').value = 'all';
+        document.getElementById('status-filter').value = 'all';
         searchInput.value = '';
         applyFilters();
         showToast("Filters reset.");
     }
     
     // --- RENDERING ENGINE ---
-    function renderTree(membersToRender) {
+    function renderTree(membersToRender, connectionsToRender) {
         if (!membersToRender || membersToRender.length === 0) {
             treeLayout.innerHTML = '';
             connectionsSVG.innerHTML = '';
@@ -243,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = memberCardTemplate.content.cloneNode(true).firstElementChild;
                 card.dataset.id = member.id;
                 card.querySelector('.member-name').textContent = member.name;
-                card.querySelector('.member-relationship').textContent = member.relationship;
+                card.querySelector('.member-relationship').textContent = member.relationship || '';
                 
                 let birthDetails = member.birthDate ? new Date(member.birthDate).toLocaleDateString() : 'N/A';
                 if (member.deathDate) birthDetails += ` - ${new Date(member.deathDate).toLocaleDateString()}`;
@@ -278,16 +371,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             treeLayout.appendChild(generationDiv);
         });
-        setTimeout(drawConnections, 50);
+        setTimeout(() => drawConnections(connectionsToRender), 50);
     }
     
-    function drawConnections() {
+    function drawConnections(connectionsToRender) {
         connectionsSVG.innerHTML = '';
         annotationsContainer.innerHTML = '';
-        const visibleMemberIds = new Set(currentViewMembers.map(m => m.id));
+        const showNotes = document.getElementById('toggle-notes').checked;
 
-        familyData.connections.forEach(conn => {
-            if (!conn.members.every(id => visibleMemberIds.has(id))) return;
+        (connectionsToRender || []).forEach(conn => {
             const [fromId, toId] = conn.members;
             const fromCard = document.querySelector(`.member-card[data-id='${fromId}']`);
             const toCard = document.querySelector(`.member-card[data-id='${toId}']`);
@@ -299,14 +391,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d = '', midX, midY;
 
-            if (conn.type === 'Spouse') {
-                const fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
-                const fromX = fromRect.right - containerRect.left;
-                const toX = toRect.left - containerRect.left;
-                d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${fromY}, ${toX} ${fromY}`;
-                [midX, midY] = [(fromX + toX) / 2, fromY];
-                path.classList.add('spouse-married');
-            } else if (conn.type === 'Parent-Child') {
+            if (conn.link === 'Spouse' || conn.link === 'Partner') {
+                let fromX, fromY, toX, toY;
+                if (window.innerWidth <= 768) {
+                    fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
+                    toX = (toRect.left + toRect.right) / 2 - containerRect.left;
+                    fromY = fromRect.bottom - containerRect.top;
+                    toY = toRect.top - containerRect.top;
+                    d = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+                } else {
+                    fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
+                    fromX = fromRect.right - containerRect.left;
+                    toX = toRect.left - containerRect.left;
+                    d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${fromY}, ${toX} ${fromY}`;
+                }
+                [midX, midY] = [(fromX + toX) / 2, (fromY + (toRect.top + toRect.bottom) / 2 - containerRect.top) / 2];
+            } else if (conn.link === 'Parent-Child') {
                 const pRect = fromCard.getBoundingClientRect();
                 const cRect = toCard.getBoundingClientRect();
                 const fromX = (pRect.left + pRect.right) / 2 - containerRect.left;
@@ -316,35 +416,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ctrlY = fromY + (toY - fromY) / 2;
                 d = `M ${fromX} ${fromY} C ${fromX} ${ctrlY}, ${toX} ${ctrlY}, ${toX} ${toY}`;
                 [midX, midY] = [(fromX + toX) / 2, ctrlY];
-                path.classList.add('parent-child');
-            } else if (conn.type === 'Sibling') {
+            } else if (conn.link === 'Sibling') {
                 const fromY = fromRect.top - containerRect.top;
                 const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
                 const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
                 d = `M ${fromX} ${fromY} C ${fromX} ${fromY - 40}, ${toX} ${fromY - 40}, ${toX} ${fromY}`;
                 [midX, midY] = [(fromX + toX) / 2, fromY - 30];
-                path.classList.add('sibling');
-            } else if (conn.type === 'Extended') {
-                const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
-                const fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
-                const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
-                const toY = (toRect.top + toRect.bottom) / 2 - containerRect.top;
-                d = `M ${fromX} ${fromY} L ${toX} ${toY}`;
-                [midX, midY] = [(fromX + toX) / 2, (fromY + toY) / 2];
-                path.classList.add('extended-family');
             }
 
             path.setAttribute('d', d);
+            path.classList.add(conn.link);
             connectionsSVG.appendChild(path);
-
-            const icon = document.createElement('div');
-            icon.className = 'annotation-icon';
-            icon.dataset.id = conn.id;
-            icon.innerHTML = `<i class="fa-solid ${conn.annotation ? 'fa-info' : 'fa-plus'}"></i><div class="annotation-tooltip">${conn.annotation || 'Click to add note'}</div>`;
-            icon.style.left = `${midX}px`;
-            icon.style.top = `${midY}px`;
-            icon.addEventListener('click', (e) => { e.stopPropagation(); openRelationshipModal(e.currentTarget.dataset.id); });
-            annotationsContainer.appendChild(icon);
+            
+            if (showNotes && conn.note) {
+                const noteText = document.createElement('div');
+                noteText.className = 'connection-note';
+                noteText.dataset.id = conn.id;
+                noteText.textContent = conn.note;
+                noteText.style.left = `${midX}px`;
+                noteText.style.top = `${midY}px`;
+                annotationsContainer.appendChild(noteText);
+            }
         });
     }
 
@@ -393,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.assign(member, {
                 name: document.getElementById('name').value,
                 relationship: document.getElementById('relationship').value,
+                status: document.getElementById('status').value,
                 birthDate: document.getElementById('birthDate').value,
                 deathDate: document.getElementById('deathDate').value,
                 description: document.getElementById('description').value,
@@ -405,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: Date.now(),
                 name: document.getElementById('name').value || 'New Member',
                 relationship: document.getElementById('relationship').value || 'Person',
+                status: document.getElementById('status').value,
                 birthDate: document.getElementById('birthDate').value,
                 deathDate: document.getElementById('deathDate').value,
                 description: document.getElementById('description').value,
@@ -414,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             familyData.members.push(newMember);
             populateSearchDatalist();
+            populateFilterDropdowns();
             showToast(`${newMember.name} added to the tree!`);
         }
         closeModal();
@@ -430,10 +525,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleTagInput(e) {
-        if (e.key === 'Enter' && newTagInput.value.trim()) {
+        if (e.key === 'Enter' && e.target.value.trim()) {
             e.preventDefault();
-            createTagElement(newTagInput.value.trim());
-            newTagInput.value = '';
+            createTagElement(e.target.value.trim());
+            e.target.value = '';
         }
     }
 
@@ -451,15 +546,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openRelationshipModal(connId = null) {
         const modal = document.getElementById('relationship-modal');
-        const form = document.getElementById('relationship-form-modal');
-        form.reset();
-        
         const conn = familyData.connections.find(c => c.id === connId);
         if (!conn) return;
 
         document.getElementById('relationshipId').value = conn.id;
-        document.getElementById('relationshipNote').value = conn.annotation || '';
-        document.getElementById('relationship-modal-title').textContent = "Edit Relationship Note";
+        document.getElementById('relationshipLinkModal').innerHTML = relationshipLinks.map(t => `<option value="${t}" ${conn.link === t ? 'selected' : ''}>${t}</option>`).join('');
+        document.getElementById('relationshipTypeModal').innerHTML = relationshipTypes.map(t => `<option value="${t}" ${conn.type === t ? 'selected' : ''}>${t}</option>`).join('');
+        document.getElementById('relationshipStatusModal').innerHTML = linkStatuses.map(s => `<option value="${s}" ${conn.status === s ? 'selected' : ''}>${s}</option>`).join('');
+        document.getElementById('relationshipNoteModal').value = conn.note || '';
         
         modal.classList.add('visible');
     }
@@ -468,22 +562,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveRelationship() {
         const id = document.getElementById('relationshipId').value;
-        const note = document.getElementById('relationshipNote').value;
-
         const conn = familyData.connections.find(c => c.id === id);
         if (conn) {
-            conn.annotation = note;
+            conn.type = document.getElementById('relationshipTypeModal').value;
+            conn.status = document.getElementById('relationshipStatusModal').value;
+            conn.note = document.getElementById('relationshipNoteModal').value;
         }
-        
         applyFilters();
         closeRelationshipModal();
     }
     
     function deleteRelationship() {
         const id = document.getElementById('relationshipId').value;
-        if (confirm('Are you sure you want to delete this relationship? This will only remove the note, not the link.')) {
-            const conn = familyData.connections.find(c => c.id === id);
-            if(conn) conn.annotation = '';
+        if (confirm('Are you sure you want to delete this relationship link?')) {
+            familyData.connections = familyData.connections.filter(c => c.id !== id);
             applyFilters();
             closeRelationshipModal();
         }
@@ -513,12 +605,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             item.innerHTML = `
                 <div>
-                    <span><strong>${fromMember.name}</strong> &harr; <strong>${toMember.name}</strong><br><small>${conn.type}</small></span>
+                    <span><strong>${fromMember.name}</strong> &harr; <strong>${toMember.name}</strong><br><small>${conn.link} (${conn.type})</small></span>
                     ${statusHTML}
                 </div>
                 <div class="actions">
-                    <button data-id="${conn.id}" class="edit-rel" title="Edit Note"><i class="fa-solid fa-pencil"></i></button>
-                    <button data-id="${conn.id}" class="delete-rel" title="Delete Relationship"><i class="fa-solid fa-trash"></i></button>
+                    <button data-id="${conn.id}" class="edit-rel" title="Edit Link"><i class="fa-solid fa-pencil"></i></button>
+                    <button data-id="${conn.id}" class="delete-rel" title="Delete Link"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             listContainer.appendChild(item);
@@ -526,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         listContainer.querySelectorAll('.edit-rel').forEach(b => b.addEventListener('click', (e) => openRelationshipModal(e.currentTarget.dataset.id)));
         listContainer.querySelectorAll('.delete-rel').forEach(b => b.addEventListener('click', (e) => {
-            if (confirm('Are you sure you want to delete this entire relationship link?')) {
+            if (confirm('Are you sure you want to delete this relationship link?')) {
                 familyData.connections = familyData.connections.filter(c => c.id !== e.currentTarget.dataset.id);
                 applyFilters();
             }
@@ -537,27 +629,30 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const fromId = parseInt(document.getElementById('rel-from').value);
         const toId = parseInt(document.getElementById('rel-to').value);
+        const fromRole = document.getElementById('rel-from-role').value;
+        const toRole = document.getElementById('rel-to-role').value;
+        const link = document.getElementById('rel-link').value;
         const type = document.getElementById('rel-type').value;
         const status = document.getElementById('rel-status').value;
+        const note = document.getElementById('rel-note').value;
 
         if (!fromId || !toId) return showToast("Please select two people.");
         if (fromId === toId) return showToast("Cannot link a person to themselves.");
         
+        const fromMember = familyData.members.find(m => m.id === fromId);
+        const toMember = familyData.members.find(m => m.id === toId);
+        if (fromMember) fromMember.relationship = fromRole;
+        if (toMember) toMember.relationship = toRole;
+
         let members = [fromId, toId];
-        if (type === 'Parent-Child') {
-            const fromGen = familyData.members.find(m => m.id === fromId)?.generation ?? -1;
-            const toGen = familyData.members.find(m => m.id === toId)?.generation ?? -1;
-            if(fromGen > toGen) members = [toId, fromId];
-            else if (fromGen === toGen) return showToast("Parents and children must be in different generations.");
+        if (link === 'Parent-Child') {
+            if(fromMember.generation > toMember.generation) members = [toId, fromId];
+            else if (fromMember.generation === toMember.generation) return showToast("Parents and children must be in different generations.");
         }
         
-        familyData.connections.push({
-            id: `c${Date.now()}`, members, type, status, 
-            annotation: '',
-            direct: type !== 'Spouse' && type !== 'Extended'
-        });
+        familyData.connections.push({ id: `c${Date.now()}`, members, link, type, status, note });
 
-        showToast("Relationship added!");
+        showToast("Relationship Link added!");
         applyFilters();
     }
 
@@ -579,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scale = Math.max(0.2, Math.min(2, scale + amount));
         treeContainer.style.transform = `scale(${scale})`;
         zoomLevelDisplay.textContent = `${Math.round(scale * 100)}%`;
-        setTimeout(drawConnections, 300);
+        setTimeout(() => drawConnections(currentViewConnections), 300);
     }
     
     function resetView() {
@@ -587,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
         treeContainer.style.transform = 'scale(1)';
         zoomLevelDisplay.textContent = '100%';
         canvas.scrollTop = 0; canvas.scrollLeft = 0;
-        setTimeout(drawConnections, 300);
+        setTimeout(() => drawConnections(currentViewConnections), 300);
     }
 
     function toggleFullscreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
@@ -632,6 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (importedData.members && importedData.connections) {
                     familyData = importedData;
                     populateSearchDatalist();
+                    populateFilterDropdowns();
                     resetAllFilters();
                     showToast('Family data imported successfully!');
                 } else {
@@ -650,13 +746,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Generating ${format.toUpperCase()}...`);
         const tempClass = 'is-exporting';
         treeContainer.classList.add(tempClass);
-        drawConnections();
+        drawConnections(currentViewConnections);
         
         setTimeout(() => {
             html2canvas(treeContainer, { backgroundColor: null, scale: 2 }).then(canvas => {
                 callback(canvas);
                 treeContainer.classList.remove(tempClass);
-                drawConnections();
+                drawConnections(currentViewConnections);
             });
         }, 100);
     }
@@ -699,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function exportCsv() {
         showToast('Generating CSV...');
-        const headers = ['id', 'name', 'relationship', 'birthDate', 'deathDate', 'generation', 'side', 'tags', 'description'];
+        const headers = ['id', 'name', 'relationship', 'status', 'birthDate', 'deathDate', 'generation', 'side', 'tags', 'description'];
         let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
         
         familyData.members.forEach(member => {
