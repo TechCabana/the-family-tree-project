@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATIC DATA FOR DROPDOWNS ---
     const relationshipRoles = ["Son", "Daughter", "Father", "Mother", "Grandfather", "Grandmother", "Great-Grandfather", "Great-Grandmother", "Step-Father", "Step-Mother"];
     const relationshipLinks = ["Parent-Child", "Spouse", "Partner", "Sibling"];
-    const relationshipStatuses = ["Married", "Engaged", "Separated", "Divorced", "Single"];
+    const relationshipStatuses = ["Married", "Engaged", "Separated", "Divorced", "Single", "Partnered"];
     const linkStatuses = ["Married", "Divorced", "Partner", "Engaged", "Separated"];
     const relationshipTypes = ["Biological", "Adopted", "Step-Relationship"];
 
@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('main-canvas');
     const treeContainer = document.getElementById('tree-container');
     const searchInput = document.getElementById('search-member');
-    const memberDatalist = document.getElementById('member-names');
     const annotationsContainer = document.getElementById('connection-annotations');
     const zoomLevelDisplay = document.getElementById('zoom-level');
     const editModal = document.getElementById('edit-modal');
@@ -65,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateStaticDropdowns();
         populateFilterDropdowns();
         applyFilters(); 
+        showCoachMark();
     }
 
     function populateFilterDropdowns() {
@@ -95,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('change', handleSearchSelection); 
 
         document.getElementById('tag-filter').addEventListener('input', applyFilters);
+        document.getElementById('side-filter').addEventListener('change', applyFilters);
+        document.getElementById('level-filter').addEventListener('change', applyFilters);
         document.getElementById('role-filter').addEventListener('change', applyFilters);
         document.getElementById('link-filter').addEventListener('change', applyFilters);
         document.getElementById('status-filter').addEventListener('change', applyFilters);
@@ -109,6 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
         document.getElementById('search-relationships').addEventListener('input', handleRelationshipSearch);
+
+        document.getElementById('level-select-all').addEventListener('click', () => {
+            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
+            applyFilters();
+        });
+        document.getElementById('level-deselect-all').addEventListener('click', () => {
+            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = false);
+            applyFilters();
+        });
 
         document.getElementById('zoomInBtn').addEventListener('click', () => updateZoom(0.1));
         document.getElementById('zoomOutBtn').addEventListener('click', () => updateZoom(-0.1));
@@ -154,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dropdown.classList.toggle('is-active');
             });
         });
-
+        
         const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
         const mobileNavToggle = document.getElementById('mobile-nav-toggle');
         const mobileNavClose = document.getElementById('mobile-nav-close');
@@ -192,6 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function populateSearchDatalist() {
+        const memberDatalist = document.getElementById('member-names');
+        if (!memberDatalist) return;
         memberDatalist.innerHTML = '';
         familyData.members.forEach(member => {
             const option = document.createElement('option');
@@ -200,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- CORE LOGIC: FILTERING, FOCUSING, CLEARING ---
+    // --- CORE LOGIC ---
     function clearAllData() {
         if (confirm("Are you sure you want to clear all family data? This action cannot be undone.")) {
             familyData.members = [];
@@ -275,6 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyFilters() {
         const tagQuery = document.getElementById('tag-filter').value.toLowerCase();
+        const sideQuery = document.getElementById('side-filter').value;
+        const levelQueryValues = Array.from(document.getElementById('level-filter').selectedOptions).map(opt => opt.value);
         const roleQuery = document.getElementById('role-filter').value;
         const linkQuery = document.getElementById('link-filter').value;
         const statusQuery = document.getElementById('status-filter').value;
@@ -283,6 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (tagQuery) {
             filteredMembers = filteredMembers.filter(m => m.tags && m.tags.some(tag => tag.toLowerCase().includes(tagQuery)));
+        }
+        if (sideQuery !== 'all') {
+            filteredMembers = filteredMembers.filter(m => m.side === sideQuery || m.side === 'ego');
+        }
+        if (levelQueryValues.length > 0) {
+            filteredMembers = filteredMembers.filter(m => levelQueryValues.includes(String(m.generation)));
         }
         if (roleQuery !== 'all') {
             filteredMembers = filteredMembers.filter(m => m.relationship === roleQuery);
@@ -307,12 +328,43 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function resetAllFilters() {
         document.getElementById('tag-filter').value = '';
+        document.getElementById('side-filter').value = 'all';
+        Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true); // Reset to all selected
         document.getElementById('role-filter').value = 'all';
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
         searchInput.value = '';
         applyFilters();
         showToast("Filters reset.");
+    }
+
+    function showCoachMark() {
+        const coachMark = document.getElementById('coach-mark-clear');
+        const clearButton = document.getElementById('clearDataBtn');
+        const closeButton = document.getElementById('coach-mark-close');
+
+        if (!coachMark || !clearButton || !closeButton) return;
+
+        // Position the coach mark relative to the button
+        const rect = clearButton.getBoundingClientRect();
+        const pointer = coachMark.querySelector('.coach-mark-pointer');
+        
+        coachMark.style.top = `${rect.top - coachMark.offsetHeight - 12}px`;
+        coachMark.style.left = `${rect.left + rect.width / 2 - coachMark.offsetWidth / 2}px`;
+        
+        pointer.style.top = '100%';
+        pointer.style.left = '50%';
+        pointer.style.transform = 'translateX(-50%)';
+        pointer.style.borderWidth = '12px 12px 0 12px';
+        pointer.style.borderColor = 'var(--text-dark) transparent transparent transparent';
+
+        setTimeout(() => {
+            coachMark.classList.add('is-visible');
+        }, 1500);
+
+        closeButton.addEventListener('click', () => {
+            coachMark.classList.remove('is-visible');
+        });
     }
     
     // --- RENDERING ENGINE ---
@@ -399,13 +451,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     fromY = fromRect.bottom - containerRect.top;
                     toY = toRect.top - containerRect.top;
                     d = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+                    [midX, midY] = [(fromX + toX) / 2, (fromY + toY) / 2];
                 } else {
                     fromY = (fromRect.top + fromRect.bottom) / 2 - containerRect.top;
                     fromX = fromRect.right - containerRect.left;
                     toX = toRect.left - containerRect.left;
                     d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${fromY}, ${toX} ${fromY}`;
+                    [midX, midY] = [(fromX + toX) / 2, fromY];
                 }
-                [midX, midY] = [(fromX + toX) / 2, (fromY + (toRect.top + toRect.bottom) / 2 - containerRect.top) / 2];
             } else if (conn.link === 'Parent-Child') {
                 const pRect = fromCard.getBoundingClientRect();
                 const cRect = toCard.getBoundingClientRect();
@@ -549,11 +602,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const conn = familyData.connections.find(c => c.id === connId);
         if (!conn) return;
 
+        const [fromId, toId] = conn.members;
+        const fromMember = familyData.members.find(m => m.id === fromId);
+        const toMember = familyData.members.find(m => m.id === toId);
+
         document.getElementById('relationshipId').value = conn.id;
         document.getElementById('relationshipLinkModal').innerHTML = relationshipLinks.map(t => `<option value="${t}" ${conn.link === t ? 'selected' : ''}>${t}</option>`).join('');
         document.getElementById('relationshipTypeModal').innerHTML = relationshipTypes.map(t => `<option value="${t}" ${conn.type === t ? 'selected' : ''}>${t}</option>`).join('');
         document.getElementById('relationshipStatusModal').innerHTML = linkStatuses.map(s => `<option value="${s}" ${conn.status === s ? 'selected' : ''}>${s}</option>`).join('');
         document.getElementById('relationshipNoteModal').value = conn.note || '';
+        document.getElementById('relFromRoleModal').innerHTML = relationshipRoles.map(r => `<option value="${r}" ${fromMember.relationship === r ? 'selected' : ''}>${r}</option>`).join('');
+        document.getElementById('relToRoleModal').innerHTML = relationshipRoles.map(r => `<option value="${r}" ${toMember.relationship === r ? 'selected' : ''}>${r}</option>`).join('');
+        document.getElementById('relFromRoleModalLabel').textContent = `${fromMember.name}'s Role`;
+        document.getElementById('relToRoleModalLabel').textContent = `${toMember.name}'s Role`;
         
         modal.classList.add('visible');
     }
@@ -564,9 +625,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = document.getElementById('relationshipId').value;
         const conn = familyData.connections.find(c => c.id === id);
         if (conn) {
+            conn.link = document.getElementById('relationshipLinkModal').value;
             conn.type = document.getElementById('relationshipTypeModal').value;
             conn.status = document.getElementById('relationshipStatusModal').value;
             conn.note = document.getElementById('relationshipNoteModal').value;
+
+            const [fromId, toId] = conn.members;
+            const fromMember = familyData.members.find(m => m.id === fromId);
+            const toMember = familyData.members.find(m => m.id === toId);
+
+            if(fromMember) fromMember.relationship = document.getElementById('relFromRoleModal').value;
+            if(toMember) toMember.relationship = document.getElementById('relToRoleModal').value;
         }
         applyFilters();
         closeRelationshipModal();
@@ -589,8 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const members = familyData.members.sort((a, b) => a.name.localeCompare(b.name));
         const options = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-        fromSelect.innerHTML = options;
-        toSelect.innerHTML = options;
+        
+        const newMemberOption = '<option value="new">-- Add New Member --</option>';
+        fromSelect.innerHTML = newMemberOption + options;
+        toSelect.innerHTML = newMemberOption + options;
 
         listContainer.innerHTML = '';
         familyData.connections.forEach(conn => {
@@ -667,6 +738,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.style.display = 'none';
             }
         });
+    }
+    
+    function handleNewMemberSelection(e) {
+        if (e.target.value === 'new') {
+            openEditModal();
+            e.target.selectedIndex = 0; 
+        }
     }
 
     // --- UI CONTROLS: ZOOM, PAN, FULLSCREEN ---

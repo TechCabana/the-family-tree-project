@@ -23,6 +23,28 @@
             <div class="control-section">
                 <strong class="control-title">Filters</strong>
                 <div class="filter-group"><input type="search" id="tag-filter" placeholder="Filter by tag..."></div>
+                <div class="filter-group"><label for="side-filter">Family Side</label>
+                    <select id="side-filter">
+                        <option value="all">All Sides</option>
+                        <option value="paternal">Paternal</option>
+                        <option value="maternal">Maternal</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label-group">
+                        <label for="level-filter">Generation (Ctrl+Click)</label>
+                        <div class="multi-select-controls">
+                            <button type="button" id="level-select-all" class="btn btn-small" title="Select All"><i class="fa-solid fa-check-double"></i></button>
+                            <button type="button" id="level-deselect-all" class="btn btn-small" title="Deselect All"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <select id="level-filter" multiple>
+                        <option value="0" selected>Great-Grandparents</option>
+                        <option value="1" selected>Grandparents</option>
+                        <option value="2" selected>Parents</option>
+                        <option value="3" selected>Current</option>
+                    </select>
+                </div>
                 <div class="filter-group"><label for="role-filter">Relationship Role</label><select id="role-filter"><option value="all">All Roles</option></select></div>
                 <div class="filter-group"><label for="link-filter">Relationship Link</label><select id="link-filter"><option value="all">All Links</option></select></div>
                 <div class="filter-group"><label for="status-filter">Relationship Status</label><select id="status-filter"><option value="all">All Statuses</option></select></div>
@@ -182,7 +204,10 @@
             <form id="relationship-form-modal">
                 <div class="modal-body">
                     <input type="hidden" id="relationshipId">
-                    <div class="form-group full-width"><label for="relationshipLinkModal">Relationship Link</label><select id="relationshipLinkModal" disabled></select></div>
+                    <div class="form-group"><label id="relFromRoleModalLabel" for="relFromRoleModal">From's Role</label><select id="relFromRoleModal"></select></div>
+                    <div class="form-group"><label id="relToRoleModalLabel" for="relToRoleModal">To's Role</label><select id="relToRoleModal"></select></div>
+                    <hr class="modal-divider">
+                    <div class="form-group full-width"><label for="relationshipLinkModal">Relationship Link</label><select id="relationshipLinkModal"></select></div>
                     <div class="form-group full-width"><label for="relationshipTypeModal">Relationship Type</label><select id="relationshipTypeModal"></select></div>
                     <div class="form-group full-width"><label for="relationshipStatusModal">Relationship Status</label><select id="relationshipStatusModal"></select></div>
                     <div class="form-group full-width"><label for="relationshipNoteModal">Relationship Note</label><textarea id="relationshipNoteModal" rows="3"></textarea></div>
@@ -211,6 +236,15 @@
             <div class="member-tags"></div>
         </div>
     </template>
+    
+    <div id="coach-mark-clear" class="coach-mark">
+        <button id="coach-mark-close" class="close-btn">&times;</button>
+        <div class="coach-mark-text">
+            <strong>Play around with the demo!</strong>
+            <p>When you're ready to start your own tree, click here to clear the board.</p>
+        </div>
+        <div class="coach-mark-pointer"></div>
+    </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
