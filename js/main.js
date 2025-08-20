@@ -57,6 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => toast.classList.remove('show'), 3000);
     };
 
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
     // --- INITIALIZATION ---
     function init() {
         addEventListeners();
@@ -185,6 +194,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('search-results').classList.remove('is-visible');
             }
         });
+
+        window.addEventListener('resize', debounce(() => {
+            drawConnections(currentViewConnections);
+            repositionCoachMark();
+        }, 250));
     }
 
     function createFloatingLeaves() {
@@ -329,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetAllFilters() {
         document.getElementById('tag-filter').value = '';
         document.getElementById('side-filter').value = 'all';
-        Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true); // Reset to all selected
+        Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
         document.getElementById('role-filter').value = 'all';
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
@@ -340,26 +354,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showCoachMark() {
         const coachMark = document.getElementById('coach-mark-clear');
-        const clearButton = document.getElementById('clearDataBtn');
         const closeButton = document.getElementById('coach-mark-close');
-
-        if (!coachMark || !clearButton || !closeButton) return;
-
-        // Position the coach mark relative to the button
-        const rect = clearButton.getBoundingClientRect();
-        const pointer = coachMark.querySelector('.coach-mark-pointer');
+        if (!coachMark || !closeButton) return;
         
-        coachMark.style.top = `${rect.top - coachMark.offsetHeight - 12}px`;
-        coachMark.style.left = `${rect.left + rect.width / 2 - coachMark.offsetWidth / 2}px`;
-        
-        pointer.style.top = '100%';
-        pointer.style.left = '50%';
-        pointer.style.transform = 'translateX(-50%)';
-        pointer.style.borderWidth = '12px 12px 0 12px';
-        pointer.style.borderColor = 'var(--text-dark) transparent transparent transparent';
-
         setTimeout(() => {
             coachMark.classList.add('is-visible');
+            repositionCoachMark();
         }, 1500);
 
         closeButton.addEventListener('click', () => {
@@ -367,6 +367,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    function repositionCoachMark() {
+        const coachMark = document.getElementById('coach-mark-clear');
+        const clearButton = document.getElementById('clearDataBtn');
+        if (!coachMark || !clearButton) return;
+
+        if (!coachMark.classList.contains('is-visible')) {
+            return;
+        }
+
+        const rect = clearButton.getBoundingClientRect();
+        const pointer = coachMark.querySelector('.coach-mark-pointer');
+        const coachMarkWidth = coachMark.offsetWidth;
+        const viewportWidth = window.innerWidth;
+        
+        let left = rect.left + (rect.width / 2) - (coachMarkWidth / 2);
+
+        if (left < 10) { left = 10; }
+        if (left + coachMarkWidth > viewportWidth - 10) {
+            left = viewportWidth - coachMarkWidth - 10;
+        }
+
+        coachMark.style.top = `${rect.top - coachMark.offsetHeight - 12}px`;
+        coachMark.style.left = `${left}px`;
+        
+        const pointerLeft = rect.left + (rect.width / 2) - left;
+        pointer.style.top = '100%';
+        pointer.style.left = `${pointerLeft}px`;
+        pointer.style.transform = 'translateX(-50%)';
+        pointer.style.borderWidth = '12px 12px 0 12px';
+        pointer.style.borderColor = 'var(--text-dark) transparent transparent transparent';
+    }
+
     // --- RENDERING ENGINE ---
     function renderTree(membersToRender, connectionsToRender) {
         if (!membersToRender || membersToRender.length === 0) {
@@ -392,7 +424,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let birthDetails = member.birthDate ? new Date(member.birthDate).toLocaleDateString() : 'N/A';
                 if (member.deathDate) birthDetails += ` - ${new Date(member.deathDate).toLocaleDateString()}`;
-                card.querySelector('.birth-details').textContent = birthDetails;
+                const ageString = calculateAge(member.birthDate, member.deathDate);
+                card.querySelector('.member-details').textContent = `${birthDetails} ${ageString}`.trim();
 
                 const avatarImg = card.querySelector('.avatar-img');
                 const avatarInitials = card.querySelector('.avatar-initials');
@@ -599,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openRelationshipModal(connId = null) {
         const modal = document.getElementById('relationship-modal');
-        const conn = familyData.connections.find(c => c.id === connId);
+        const conn = familyData.connections.find(c => c.id == connId);
         if (!conn) return;
 
         const [fromId, toId] = conn.members;
@@ -623,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveRelationship() {
         const id = document.getElementById('relationshipId').value;
-        const conn = familyData.connections.find(c => c.id === id);
+        const conn = familyData.connections.find(c => c.id == id);
         if (conn) {
             conn.link = document.getElementById('relationshipLinkModal').value;
             conn.type = document.getElementById('relationshipTypeModal').value;
@@ -644,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function deleteRelationship() {
         const id = document.getElementById('relationshipId').value;
         if (confirm('Are you sure you want to delete this relationship link?')) {
-            familyData.connections = familyData.connections.filter(c => c.id !== id);
+            familyData.connections = familyData.connections.filter(c => c.id != id);
             applyFilters();
             closeRelationshipModal();
         }
@@ -690,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listContainer.querySelectorAll('.edit-rel').forEach(b => b.addEventListener('click', (e) => openRelationshipModal(e.currentTarget.dataset.id)));
         listContainer.querySelectorAll('.delete-rel').forEach(b => b.addEventListener('click', (e) => {
             if (confirm('Are you sure you want to delete this relationship link?')) {
-                familyData.connections = familyData.connections.filter(c => c.id !== e.currentTarget.dataset.id);
+                familyData.connections = familyData.connections.filter(c => c.id != e.currentTarget.dataset.id);
                 applyFilters();
             }
         }));
@@ -889,6 +922,18 @@ document.addEventListener('DOMContentLoaded', () => {
         link.setAttribute('href', encodeURI(csvContent));
         link.setAttribute('download', 'family-tree.csv');
         link.click();
+    }
+    
+    function calculateAge(birthDateStr, deathDateStr) {
+        if (!birthDateStr) return '';
+        const birthDate = new Date(birthDateStr);
+        const endDate = deathDateStr ? new Date(deathDateStr) : new Date();
+        let age = endDate.getFullYear() - birthDate.getFullYear();
+        const m = endDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age >= 0 ? `(Age ${age})` : '';
     }
 
     // --- Let's get it started! ---
