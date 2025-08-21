@@ -102,7 +102,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 .member-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .member-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
 .member-relationship { font-size: 0.9rem; color: var(--green-dark); font-weight: 600; margin-bottom: 0.75rem; }
-.member-details { font-size: 0.85rem; color: var(--text-light); margin-bottom: 1rem; }
+.member-details { font-size: 0.85rem; color: var(--text-light); margin-bottom: 1rem; line-height: 1.4; }
 .member-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
 .tag { padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 99px; color: white; }
 .edit-button { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: #f1f5f9; border: none; color: var(--text-light); cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
@@ -113,7 +113,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 #tree-connections path { fill: none; stroke-linecap: round; }
 #tree-connections path.Spouse { stroke: var(--orange); stroke-width: 2.5px; }
 #tree-connections path.Partner { stroke: var(--teal); stroke-width: 2.5px; }
-#tree-connections path.Parent-Child { stroke: var(--green-dark); stroke-width: 3px; }
+#tree-connections path.Parent { stroke: var(--green-dark); stroke-width: 3px; }
 #tree-connections path.Sibling { stroke: var(--blue); stroke-width: 2px; }
 #connection-annotations { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 .connection-note { position: absolute; transform: translate(-50%, -50%); background: var(--brown); color: white; padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--border-radius-ui); box-shadow: var(--shadow-md); white-space: nowrap; cursor: pointer; pointer-events: all; transition: transform 0.2s, box-shadow 0.2s; }
@@ -177,6 +177,12 @@ body.hide-notes .connection-note { display: none; }
 #delete-relationship-btn { margin-right: auto; }
 .modal-divider { border: none; border-top: 1px solid var(--border-color); margin: 1rem 0; }
 
+/* FIX 1: Added scrollbar for the relationship modal */
+#relationship-modal .modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
 /* Dynamic Search Results Dropdown */
 .search-results-container { display: none; position: absolute; top: calc(100% + 5px); left: 0; width: 100%; min-width: 250px; background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--border-radius-ui) var(--border-radius-ui); box-shadow: var(--shadow-lg); max-height: 300px; overflow-y: auto; z-index: 1100; }
 .search-results-container.is-visible { display: block; }
@@ -228,6 +234,22 @@ body.hide-notes .connection-note { display: none; }
 .multi-select-controls { display: flex; gap: 0.5rem; }
 #level-filter { height: 100px; }
 #level-filter option { padding: 0.25rem 0.5rem; }
+
+/* FIX 2: Added styling for the generation filter buttons */
+.multi-select-controls button {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--green-dark);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-ui);
+    transition: background-color 0.2s;
+}
+.multi-select-controls button:hover {
+    background-color: #e2e8f0;
+}
 
 /* Legend in Sidebar */
 .legend { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem; }

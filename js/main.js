@@ -3,14 +3,14 @@ import { familyData as initialFamilyData } from './data.js';
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- STATE MANAGEMENT ---
-    let familyData = JSON.parse(JSON.stringify(initialFamilyData));
+    let familyData = loadDataFromLocalStorage() || JSON.parse(JSON.stringify(initialFamilyData));
     let currentViewMembers = [];
     let currentViewConnections = [];
     let scale = 1;
 
     // --- STATIC DATA FOR DROPDOWNS ---
     const relationshipRoles = ["Son", "Daughter", "Father", "Mother", "Grandfather", "Grandmother", "Great-Grandfather", "Great-Grandmother", "Step-Father", "Step-Mother"];
-    const relationshipLinks = ["Parent-Child", "Spouse", "Partner", "Sibling"];
+    const relationshipLinks = ["Parent", "Spouse", "Partner", "Sibling"];
     const relationshipStatuses = ["Married", "Engaged", "Separated", "Divorced", "Single", "Partnered"];
     const linkStatuses = ["Married", "Divorced", "Partner", "Engaged", "Separated"];
     const relationshipTypes = ["Biological", "Adopted", "Step-Relationship"];
@@ -67,15 +67,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateAge(birthDateStr, deathDateStr) {
-        if (!birthDateStr) return '';
+        if (!birthDateStr) return null;
         const birthDate = new Date(birthDateStr);
+        if (isNaN(birthDate.getTime())) return null; 
+
         const endDate = deathDateStr ? new Date(deathDateStr) : new Date();
+         if (isNaN(endDate.getTime())) return null;
+
         let age = endDate.getFullYear() - birthDate.getFullYear();
         const m = endDate.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
             age--;
         }
-        return age >= 0 ? `(Age ${age})` : '';
+        return age >= 0 ? age : null;
+    }
+    
+    // --- DATA PERSISTENCE FUNCTIONS ---
+    function saveDataToLocalStorage() {
+        localStorage.setItem('familyTreeData', JSON.stringify(familyData));
+    }
+
+    function loadDataFromLocalStorage() {
+        const data = localStorage.getItem('familyTreeData');
+        return data ? JSON.parse(data) : null;
     }
 
     // --- INITIALIZATION ---
@@ -84,8 +98,25 @@ document.addEventListener('DOMContentLoaded', () => {
         createFloatingLeaves();
         populateStaticDropdowns();
         populateFilterDropdowns();
-        resetAllFilters(true); 
+        injectModalStyles(); 
+        resetAllFilters(true);
         showCoachMark();
+    }
+    
+    function injectModalStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            #relationship-modal .modal-content {
+                max-height: 85vh;
+                display: flex;
+                flex-direction: column;
+            }
+            #relationship-modal .modal-body {
+                overflow-y: auto;
+                flex-grow: 1;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     function populateFilterDropdowns() {
@@ -131,14 +162,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('role-filter').addEventListener('change', applyFilters);
         document.getElementById('link-filter').addEventListener('change', applyFilters);
         document.getElementById('status-filter').addEventListener('change', applyFilters);
-
-        document.getElementById('globalResetBtn').addEventListener('click', () => { resetView(); resetAllFilters(); });
+        
+        document.getElementById('globalResetBtn').addEventListener('click', resetApplicationToDemoState);
         document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
         emptyStateMessage.addEventListener('click', () => openEditModal());
         
         document.getElementById('toggle-links').addEventListener('change', (e) => document.body.classList.toggle('hide-connections', !e.target.checked));
         document.getElementById('toggle-roles').addEventListener('change', (e) => document.body.classList.toggle('hide-roles', !e.target.checked));
         document.getElementById('toggle-notes').addEventListener('change', () => drawConnections(currentViewConnections));
+        // Add listener for the new deceased toggle
+        document.getElementById('toggle-deceased').addEventListener('change', applyFilters);
 
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
         
@@ -242,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm("Are you sure you want to clear all family data? This action cannot be undone.")) {
             familyData.members = [];
             familyData.connections = [];
+            saveDataToLocalStorage(); 
             applyFilters();
         }
     }
@@ -304,14 +338,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function applyFilters() {
+        // Read the state of all filters, including the new one
         const tagQuery = document.getElementById('tag-filter').value.toLowerCase();
         const sideQuery = document.getElementById('side-filter').value;
         const levelQueryValues = Array.from(document.getElementById('level-filter').selectedOptions).map(opt => opt.value);
         const roleQuery = document.getElementById('role-filter').value;
         const linkQuery = document.getElementById('link-filter').value;
         const statusQuery = document.getElementById('status-filter').value;
+        const showDeceased = document.getElementById('toggle-deceased').checked;
 
         let filteredMembers = familyData.members;
+
+        // Apply the new deceased filter
+        if (!showDeceased) {
+            filteredMembers = filteredMembers.filter(member => !member.deathDate);
+        }
 
         if (tagQuery) {
             filteredMembers = filteredMembers.filter(m => m.tags && m.tags.some(tag => tag.toLowerCase().includes(tagQuery)));
@@ -344,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateRelationshipManager();
     }
     
-    function resetAllFilters(silent = false) {
+    function resetAllFilters(isSilent) {
         document.getElementById('tag-filter').value = '';
         document.getElementById('side-filter').value = 'all';
         Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
@@ -352,28 +393,42 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
         searchInput.value = '';
+        // Reset the deceased toggle to its default (checked)
+        document.getElementById('toggle-deceased').checked = true;
         
         applyFilters();
         
-        if (!silent) {
+        if (!isSilent) {
             showToast("Filters reset.");
+        }
+    }
+
+    function resetApplicationToDemoState() {
+        if (confirm("Are you sure you want to reset all data to the original demo? All your changes will be lost.")) {
+            familyData = JSON.parse(JSON.stringify(initialFamilyData));
+            localStorage.removeItem('familyTreeData');
+            resetView();
+            resetAllFilters(true);
+            showToast("Application has been reset to demo data.");
         }
     }
 
     function showCoachMark() {
         const coachMark = document.getElementById('coach-mark-clear');
         const closeButton = document.getElementById('coach-mark-close');
+        const clearButton = document.getElementById('clearDataBtn');
 
-        if (!coachMark || !closeButton) return;
+        if (!coachMark || !closeButton || !clearButton) return;
         
         setTimeout(() => {
-            repositionCoachMark();
-            coachMark.classList.add('is-visible');
+            if (clearButton.offsetParent !== null) { 
+                repositionCoachMark();
+                coachMark.classList.add('is-visible');
+            }
         }, 1500);
 
         closeButton.addEventListener('click', () => {
             coachMark.classList.remove('is-visible');
-            
         });
     }
     
@@ -382,7 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const clearButton = document.getElementById('clearDataBtn');
         if (!coachMark || !clearButton) return;
 
-        if (!coachMark.classList.contains('is-visible')) {
+        if (getComputedStyle(clearButton).display === 'none') {
+            coachMark.classList.remove('is-visible');
             return;
         }
 
@@ -409,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pointer.style.borderColor = 'var(--text-dark) transparent transparent transparent';
     }
 
+
     // --- RENDERING ENGINE ---
     function renderTree(membersToRender, connectionsToRender) {
         if (!membersToRender || membersToRender.length === 0) {
@@ -432,10 +489,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.querySelector('.member-name').textContent = member.name;
                 card.querySelector('.member-relationship').textContent = member.relationship || '';
                 
-                let birthDetails = member.birthDate ? new Date(member.birthDate).toLocaleDateString() : 'N/A';
-                if (member.deathDate) birthDetails += ` - ${new Date(member.deathDate).toLocaleDateString()}`;
-                const ageString = calculateAge(member.birthDate, member.deathDate);
-                card.querySelector('.member-details').textContent = `${birthDetails} ${ageString}`.trim();
+                const detailsEl = card.querySelector('.member-details');
+                const detailsParts = [];
+
+                let lifeRange = 'Dates N/A';
+                if (member.birthDate) {
+                    lifeRange = new Date(member.birthDate).toLocaleDateString();
+                    if (member.deathDate) {
+                        lifeRange += ` – ${new Date(member.deathDate).toLocaleDateString()}`;
+                    }
+                }
+                detailsParts.push(lifeRange);
+
+                const age = calculateAge(member.birthDate, member.deathDate);
+                if (age !== null) {
+                    let ageText = member.deathDate ? `(Deceased, Age ${age})` : `(Age ${age})`;
+                    detailsParts.push(ageText);
+                }
+                
+                detailsEl.innerHTML = detailsParts.join('<br>');
 
                 const avatarImg = card.querySelector('.avatar-img');
                 const avatarInitials = card.querySelector('.avatar-initials');
@@ -502,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     d = `M ${fromX} ${fromY} C ${fromX + 30} ${fromY}, ${toX - 30} ${fromY}, ${toX} ${fromY}`;
                     [midX, midY] = [(fromX + toX) / 2, fromY];
                 }
-            } else if (conn.link === 'Parent-Child') {
+            } else if (conn.link === 'Parent') {
                 const pRect = fromCard.getBoundingClientRect();
                 const cRect = toCard.getBoundingClientRect();
                 const fromX = (pRect.left + pRect.right) / 2 - containerRect.left;
@@ -576,37 +648,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveMember() {
         const id = parseInt(memberIdInput.value);
+        const memberData = {
+            name: document.getElementById('name').value,
+            relationship: document.getElementById('relationship').value,
+            status: document.getElementById('status').value,
+            birthDate: document.getElementById('birthDate').value,
+            deathDate: document.getElementById('deathDate').value,
+            generation: parseInt(document.getElementById('generation').value, 10),
+            description: document.getElementById('description').value,
+            avatar: (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : null,
+            tags: Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent)
+        };
+
         if (id) {
             const member = familyData.members.find(m => m.id === id);
-            Object.assign(member, {
-                name: document.getElementById('name').value,
-                relationship: document.getElementById('relationship').value,
-                status: document.getElementById('status').value,
-                birthDate: document.getElementById('birthDate').value,
-                deathDate: document.getElementById('deathDate').value,
-                description: document.getElementById('description').value,
-                avatar: (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : member.avatar,
-                tags: Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent)
-            });
+            Object.assign(member, memberData);
+            if (memberData.avatar === null) {
+                member.avatar = familyData.members.find(m => m.id === id).avatar;
+            }
             showToast(`${member.name}'s details saved!`);
         } else {
             const newMember = {
+                ...memberData,
                 id: Date.now(),
-                name: document.getElementById('name').value || 'New Member',
-                relationship: document.getElementById('relationship').value || 'Person',
-                status: document.getElementById('status').value,
-                birthDate: document.getElementById('birthDate').value,
-                deathDate: document.getElementById('deathDate').value,
-                description: document.getElementById('description').value,
-                tags: Array.from(tagsInputContainer.querySelectorAll('.tag-item span')).map(t => t.textContent),
-                avatar: (modalAvatarImg.src.startsWith('data:') || modalAvatarImg.src.startsWith('http')) ? modalAvatarImg.src : null,
-                generation: 3, side: 'ego'
+                name: memberData.name || 'New Member',
+                relationship: memberData.relationship || 'Person',
+                generation: isNaN(memberData.generation) ? 0 : memberData.generation,
+                side: 'ego'
             };
             familyData.members.push(newMember);
-            populateSearchDatalist();
-            populateFilterDropdowns();
             showToast(`${newMember.name} added to the tree!`);
         }
+        
+        saveDataToLocalStorage(); 
         closeModal();
         applyFilters();
     }
@@ -680,6 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(fromMember) fromMember.relationship = document.getElementById('relFromRoleModal').value;
             if(toMember) toMember.relationship = document.getElementById('relToRoleModal').value;
         }
+        saveDataToLocalStorage(); 
         applyFilters();
         closeRelationshipModal();
     }
@@ -688,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = document.getElementById('relationshipId').value;
         if (confirm('Are you sure you want to delete this relationship link?')) {
             familyData.connections = familyData.connections.filter(c => c.id != id);
+            saveDataToLocalStorage(); 
             applyFilters();
             closeRelationshipModal();
         }
@@ -730,6 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Are you sure you want to delete this person? This will also remove all their connections.`)) {
             familyData.members = familyData.members.filter(m => m.id !== memberIdToDelete);
             familyData.connections = familyData.connections.filter(c => !c.members.includes(memberIdToDelete));
+            saveDataToLocalStorage(); 
             applyFilters();
         }
     }
@@ -777,6 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listContainer.querySelectorAll('.delete-rel').forEach(b => b.addEventListener('click', (e) => {
             if (confirm('Are you sure you want to delete this relationship link?')) {
                 familyData.connections = familyData.connections.filter(c => c.id != e.currentTarget.dataset.id);
+                saveDataToLocalStorage(); 
                 applyFilters();
             }
         }));
@@ -798,13 +876,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const toMember = familyData.members.find(m => m.id === toId);
 
         let members = [fromId, toId];
-        if (link === 'Parent-Child') {
+        if (link === 'Parent') {
             if(fromMember.generation > toMember.generation) members = [toId, fromId];
-            else if (fromMember.generation === toMember.generation) return showToast("Parents and children must be in different generations.");
+            else if (fromMember.generation === toMember.generation) {
+                return showToast("Parents and children must be in different generations. Please check their generation numbers.");
+            }
         }
         
         familyData.connections.push({ id: `c${Date.now()}`, members, link, type, status, note });
-
+        saveDataToLocalStorage(); 
         showToast("Relationship Link added!");
         applyFilters();
     }
@@ -878,9 +958,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const importedData = JSON.parse(e.target.result);
                 if (importedData.members && importedData.connections) {
                     familyData = importedData;
-                    populateSearchDatalist();
-                    populateFilterDropdowns();
-                    resetAllFilters();
+                    saveDataToLocalStorage(); 
+                    resetAllFilters(true);
                 } else {
                     alert('Error: Invalid JSON file format.');
                 }

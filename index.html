@@ -55,8 +55,9 @@
                 <div class="toggle-group"><label for="toggle-links">Show Relationship Links</label><label class="toggle-switch"><input type="checkbox" id="toggle-links" checked><span class="slider"></span></label></div>
                 <div class="toggle-group"><label for="toggle-roles">Show Relationship Roles</label><label class="toggle-switch"><input type="checkbox" id="toggle-roles" checked><span class="slider"></span></label></div>
                 <div class="toggle-group"><label for="toggle-notes">Show Relationship Notes</label><label class="toggle-switch"><input type="checkbox" id="toggle-notes" checked><span class="slider"></span></label></div>
+                <div class="toggle-group"><label for="toggle-deceased">Show Deceased</label><label class="toggle-switch"><input type="checkbox" id="toggle-deceased" checked><span class="slider"></span></label></div>
                 <div class="legend">
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent-Child</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent</div>
                     <div class="legend-item"><span class="color-swatch" style="background: var(--blue);"></span>Sibling</div>
                     <div class="legend-item"><span class="color-swatch" style="background: var(--orange);"></span>Spouse</div>
                     <div class="legend-item"><span class="color-swatch" style="background: var(--teal);"></span>Partner</div>
@@ -182,6 +183,7 @@
                     <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" required></div>
                     <div class="form-group"><label for="relationship">Relationship Role</label><select id="relationship"></select></div>
                     <div class="form-group"><label for="status">Relationship Status</label><select id="status"></select></div>
+                    <div class="form-group"><label for="generation">Generation</label><input type="number" id="generation" name="generation" placeholder="e.g., 0, 1, 2..."></div>
                     <div class="form-group"><label for="birthDate">Birth Date</label><input type="date" id="birthDate"></div>
                     <div class="form-group"><label for="deathDate">Date of Passing (optional)</label><input type="date" id="deathDate"></div>
                     <div class="form-group full-width"><label for="description">Personal Story / Notes</label><textarea id="description" rows="3"></textarea></div>
