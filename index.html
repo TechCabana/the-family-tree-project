@@ -13,6 +13,7 @@
 <body>
     <div class="leaves-container" id="leaves-container"></div>
     <div id="app-overlay"></div>
+    <div class="toast" id="toast"></div>
     
     <aside id="controls-bar" class="controls-sidebar">
         <div class="sidebar-header">
@@ -39,10 +40,10 @@
                         </div>
                     </div>
                     <select id="level-filter" multiple>
-                        <option value="0" selected>Great-Grandparents</option>
-                        <option value="1" selected>Grandparents</option>
-                        <option value="2" selected>Parents</option>
-                        <option value="3" selected>Current</option>
+                        <option value="0">Great-Grandparents</option>
+                        <option value="1">Grandparents</option>
+                        <option value="2">Parents</option>
+                        <option value="3">Current</option>
                     </select>
                 </div>
                 <div class="filter-group"><label for="role-filter">Relationship Role</label><select id="role-filter"><option value="all">All Roles</option></select></div>
@@ -61,23 +62,26 @@
                     <div class="legend-item"><span class="color-swatch" style="background: var(--teal);"></span>Partner</div>
                 </div>
             </div>
+            <div class="control-section" id="people-manager">
+                <strong class="control-title">People Manager</strong>
+                <button type="button" id="add-new-person-btn" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Add New Person</button>
+                <div class="filter-group">
+                    <input type="search" id="search-people" placeholder="Search for a person...">
+                </div>
+                <div id="existing-people-list" class="manager-list"></div>
+            </div>
             <div class="control-section" id="relationship-manager">
                 <strong class="control-title">Relationship Manager</strong>
                 <form id="relationship-form-sidebar">
                     <div class="filter-group"><label for="rel-from">From</label><select id="rel-from"></select></div>
-                    <div class="filter-group"><label for="rel-from-role">From's Relationship Role</label><select id="rel-from-role"></select></div>
                     <div class="filter-group"><label for="rel-to">To</label><select id="rel-to"></select></div>
-                    <div class="filter-group"><label for="rel-to-role">To's Relationship Role</label><select id="rel-to-role"></select></div>
                     <div class="filter-group"><label for="rel-link">Relationship Link</label><select id="rel-link"></select></div>
                     <div class="filter-group"><label for="rel-type">Relationship Type</label><select id="rel-type"></select></div>
                     <div class="filter-group"><label for="rel-status">Relationship Status</label><select id="rel-status"></select></div>
                     <div class="filter-group"><label for="rel-note">Relationship Note</label><textarea id="rel-note" rows="2"></textarea></div>
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Link</button>
                 </form>
-                <div class="filter-group">
-                    <input type="search" id="search-relationships" placeholder="Search existing links...">
-                </div>
-                <div id="existing-relationships-list"></div>
+                <div id="existing-relationships-list" class="manager-list"></div>
             </div>
             <div class="control-section">
                 <strong class="control-title">Data Management</strong>

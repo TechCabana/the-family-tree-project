@@ -66,13 +66,25 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    function calculateAge(birthDateStr, deathDateStr) {
+        if (!birthDateStr) return '';
+        const birthDate = new Date(birthDateStr);
+        const endDate = deathDateStr ? new Date(deathDateStr) : new Date();
+        let age = endDate.getFullYear() - birthDate.getFullYear();
+        const m = endDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age >= 0 ? `(Age ${age})` : '';
+    }
+
     // --- INITIALIZATION ---
     function init() {
         addEventListeners();
         createFloatingLeaves();
         populateStaticDropdowns();
         populateFilterDropdowns();
-        applyFilters(); 
+        resetAllFilters(true); 
         showCoachMark();
     }
 
@@ -85,8 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateStaticDropdowns() {
         document.getElementById('relationship').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
         document.getElementById('status').innerHTML = relationshipStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
-        document.getElementById('rel-from-role').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
-        document.getElementById('rel-to-role').innerHTML = relationshipRoles.map(r => `<option value="${r}">${r}</option>`).join('');
         document.getElementById('rel-link').innerHTML = relationshipLinks.map(l => `<option value="${l}">${l}</option>`).join('');
         document.getElementById('rel-type').innerHTML = relationshipTypes.map(t => `<option value="${t}">${t}</option>`).join('');
         document.getElementById('rel-status').innerHTML = linkStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -99,9 +109,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('toggle-controls-btn').addEventListener('click', () => controlsBar.classList.add('is-open'));
         document.getElementById('close-controls-btn').addEventListener('click', () => controlsBar.classList.remove('is-open'));
 
+        document.getElementById('add-new-person-btn').addEventListener('click', () => openEditModal());
+
         searchInput.addEventListener('input', handleSearchInput);
         searchInput.addEventListener('focus', handleSearchInput);
-        searchInput.addEventListener('change', handleSearchSelection); 
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstResult = document.querySelector('#search-results .search-result-item');
+                if (firstResult && firstResult.dataset.id) {
+                    focusOnMember(parseInt(firstResult.dataset.id));
+                    searchInput.value = '';
+                    document.getElementById('search-results').classList.remove('is-visible');
+                }
+            }
+        });
 
         document.getElementById('tag-filter').addEventListener('input', applyFilters);
         document.getElementById('side-filter').addEventListener('change', applyFilters);
@@ -119,8 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('toggle-notes').addEventListener('change', () => drawConnections(currentViewConnections));
 
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
-        document.getElementById('search-relationships').addEventListener('input', handleRelationshipSearch);
-
+        
         document.getElementById('level-select-all').addEventListener('click', () => {
             Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
             applyFilters();
@@ -216,33 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function populateSearchDatalist() {
-        const memberDatalist = document.getElementById('member-names');
-        if (!memberDatalist) return;
-        memberDatalist.innerHTML = '';
-        familyData.members.forEach(member => {
-            const option = document.createElement('option');
-            option.value = member.name;
-            memberDatalist.appendChild(option);
-        });
-    }
-    
     // --- CORE LOGIC ---
     function clearAllData() {
         if (confirm("Are you sure you want to clear all family data? This action cannot be undone.")) {
             familyData.members = [];
             familyData.connections = [];
             applyFilters();
-            showToast("All data has been cleared.");
-        }
-    }
-
-    function handleSearchSelection(e) { 
-        const member = familyData.members.find(m => m.name.toLowerCase() === e.target.value.toLowerCase());
-        if (member) {
-            focusOnMember(member.id);
-            e.target.value = '';
-            document.getElementById('search-results').classList.remove('is-visible');
         }
     }
 
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.dataset.id = member.id;
                 item.innerHTML = `${member.name} <small>(${member.relationship || ''})</small>`;
                 item.addEventListener('click', () => {
-                    focusOnMember(member.id);
+                    focusOnMember(parseInt(item.dataset.id));
                     searchInput.value = '';
                     resultsContainer.classList.remove('is-visible');
                 });
@@ -284,20 +284,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function focusOnMember(memberId) {
-        const focusedMember = familyData.members.find(m => m.id === memberId);
-        if (!focusedMember) return;
-        let visibleMemberIds = new Set([memberId]);
-        familyData.connections.forEach(c => {
-            if (c.members.includes(memberId)) {
-                c.members.forEach(id => visibleMemberIds.add(id));
-            }
-        });
-        
-        const membersToRender = familyData.members.filter(m => visibleMemberIds.has(m.id));
-        const connectionsToRender = familyData.connections.filter(c => c.members.every(id => visibleMemberIds.has(id)));
+        resetAllFilters(true); 
 
-        renderTree(membersToRender, connectionsToRender);
-        showToast(`Focusing on ${focusedMember.name}'s immediate family.`);
+        setTimeout(() => {
+            const card = document.querySelector(`.member-card[data-id='${memberId}']`);
+            if (card) {
+                card.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                    inline: 'center'
+                });
+
+                card.classList.add('highlight-focus');
+                setTimeout(() => {
+                    card.classList.remove('highlight-focus');
+                }, 2500); 
+            }
+        }, 100);
     }
 
     function applyFilters() {
@@ -337,10 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
         currentViewMembers = filteredMembers;
         
         renderTree(currentViewMembers, currentViewConnections);
+        populatePeopleManager();
         populateRelationshipManager();
     }
     
-    function resetAllFilters() {
+    function resetAllFilters(silent = false) {
         document.getElementById('tag-filter').value = '';
         document.getElementById('side-filter').value = 'all';
         Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
@@ -348,22 +352,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
         searchInput.value = '';
+        
         applyFilters();
-        showToast("Filters reset.");
+        
+        if (!silent) {
+            showToast("Filters reset.");
+        }
     }
 
     function showCoachMark() {
         const coachMark = document.getElementById('coach-mark-clear');
         const closeButton = document.getElementById('coach-mark-close');
+
         if (!coachMark || !closeButton) return;
         
         setTimeout(() => {
-            coachMark.classList.add('is-visible');
             repositionCoachMark();
+            coachMark.classList.add('is-visible');
         }, 1500);
 
         closeButton.addEventListener('click', () => {
             coachMark.classList.remove('is-visible');
+            
         });
     }
     
@@ -683,7 +693,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- SIDEBAR RELATIONSHIP MANAGER ---
+    // --- SIDEBAR MANAGER ---
+    function populatePeopleManager() {
+        const listContainer = document.getElementById('existing-people-list');
+        listContainer.innerHTML = '';
+        
+        currentViewMembers.sort((a, b) => a.name.localeCompare(b.name)).forEach(member => {
+            const item = document.createElement('div');
+            item.className = 'manager-list-item';
+            item.dataset.name = member.name.toLowerCase();
+            item.innerHTML = `
+                <div>
+                    <strong>${member.name}</strong>
+                    <small class="item-details">${member.relationship || ''}</small>
+                </div>
+                <div class="actions">
+                    <button data-id="${member.id}" class="edit-person" title="Edit Person"><i class="fa-solid fa-pencil"></i></button>
+                    <button data-id="${member.id}" class="delete-person" title="Delete Person"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+
+        listContainer.querySelectorAll('.edit-person').forEach(b => b.addEventListener('click', (e) => openEditModal(parseInt(e.currentTarget.dataset.id))));
+        listContainer.querySelectorAll('.delete-person').forEach(b => b.addEventListener('click', (e) => deleteMember(parseInt(e.currentTarget.dataset.id))));
+    }
+
+    function handlePeopleSearch(e) {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('#existing-people-list .manager-list-item').forEach(item => {
+            item.style.display = item.dataset.name.includes(query) ? 'flex' : 'none';
+        });
+    }
+
+    function deleteMember(memberIdToDelete) {
+        if (confirm(`Are you sure you want to delete this person? This will also remove all their connections.`)) {
+            familyData.members = familyData.members.filter(m => m.id !== memberIdToDelete);
+            familyData.connections = familyData.connections.filter(c => !c.members.includes(memberIdToDelete));
+            applyFilters();
+        }
+    }
+
     function populateRelationshipManager() {
         const fromSelect = document.getElementById('rel-from');
         const toSelect = document.getElementById('rel-to');
@@ -692,25 +742,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const members = familyData.members.sort((a, b) => a.name.localeCompare(b.name));
         const options = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
         
-        const newMemberOption = '<option value="new">-- Add New Member --</option>';
-        fromSelect.innerHTML = newMemberOption + options;
-        toSelect.innerHTML = newMemberOption + options;
+        fromSelect.innerHTML = options;
+        toSelect.innerHTML = options;
 
         listContainer.innerHTML = '';
-        familyData.connections.forEach(conn => {
+        (familyData.connections || []).forEach(conn => {
             const fromMember = familyData.members.find(m => m.id === conn.members[0]);
             const toMember = familyData.members.find(m => m.id === conn.members[1]);
             if (!fromMember || !toMember) return;
             
             const item = document.createElement('div');
-            item.className = 'relationship-item';
+            item.className = 'manager-list-item';
             item.dataset.names = `${fromMember.name.toLowerCase()} ${toMember.name.toLowerCase()}`;
-            let statusHTML = conn.status ? `<div class="rel-status">'${conn.status}'</div>` : '';
+            
+            let details = `${conn.link} (${conn.type})`;
+            if (conn.status) {
+                details += ` - ${conn.status}`;
+            }
 
             item.innerHTML = `
                 <div>
-                    <span><strong>${fromMember.name}</strong> &harr; <strong>${toMember.name}</strong><br><small>${conn.link} (${conn.type})</small></span>
-                    ${statusHTML}
+                    <strong>${fromMember.name} &harr; ${toMember.name}</strong>
+                    <small class="item-details">${details}</small>
                 </div>
                 <div class="actions">
                     <button data-id="${conn.id}" class="edit-rel" title="Edit Link"><i class="fa-solid fa-pencil"></i></button>
@@ -733,8 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const fromId = parseInt(document.getElementById('rel-from').value);
         const toId = parseInt(document.getElementById('rel-to').value);
-        const fromRole = document.getElementById('rel-from-role').value;
-        const toRole = document.getElementById('rel-to-role').value;
         const link = document.getElementById('rel-link').value;
         const type = document.getElementById('rel-type').value;
         const status = document.getElementById('rel-status').value;
@@ -745,8 +796,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const fromMember = familyData.members.find(m => m.id === fromId);
         const toMember = familyData.members.find(m => m.id === toId);
-        if (fromMember) fromMember.relationship = fromRole;
-        if (toMember) toMember.relationship = toRole;
 
         let members = [fromId, toId];
         if (link === 'Parent-Child') {
@@ -762,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleRelationshipSearch(e) {
         const query = e.target.value.toLowerCase();
-        const items = document.querySelectorAll('#existing-relationships-list .relationship-item');
+        const items = document.querySelectorAll('#existing-relationships-list .manager-list-item');
         items.forEach(item => {
             const names = item.dataset.names;
             if (names.includes(query)) {
@@ -771,13 +820,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.style.display = 'none';
             }
         });
-    }
-    
-    function handleNewMemberSelection(e) {
-        if (e.target.value === 'new') {
-            openEditModal();
-            e.target.selectedIndex = 0; 
-        }
     }
 
     // --- UI CONTROLS: ZOOM, PAN, FULLSCREEN ---
@@ -825,7 +867,6 @@ document.addEventListener('DOMContentLoaded', () => {
         linkElement.setAttribute('href', dataUri);
         linkElement.setAttribute('download', 'family-tree-data.json');
         linkElement.click();
-        showToast('JSON data exported.');
     }
 
     function importJson(event) {
@@ -840,12 +881,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     populateSearchDatalist();
                     populateFilterDropdowns();
                     resetAllFilters();
-                    showToast('Family data imported successfully!');
                 } else {
-                    showToast('Error: Invalid JSON file format.');
+                    alert('Error: Invalid JSON file format.');
                 }
             } catch (error) {
-                showToast('Error parsing JSON file.');
+                alert('Error parsing JSON file.');
                 console.error("JSON Parse Error:", error);
             }
         };
@@ -854,7 +894,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function captureTree(callback, format) {
-        showToast(`Generating ${format.toUpperCase()}...`);
         const tempClass = 'is-exporting';
         treeContainer.classList.add(tempClass);
         drawConnections(currentViewConnections);
@@ -892,7 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function exportSvg() {
-        showToast('Generating SVG...');
         const treeNode = document.getElementById('tree-container');
         htmlToImage.toSvg(treeNode, {
             filter: (node) => node.tagName !== 'BUTTON'
@@ -905,7 +943,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function exportCsv() {
-        showToast('Generating CSV...');
         const headers = ['id', 'name', 'relationship', 'status', 'birthDate', 'deathDate', 'generation', 'side', 'tags', 'description'];
         let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
         
@@ -924,18 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
     }
     
-    function calculateAge(birthDateStr, deathDateStr) {
-        if (!birthDateStr) return '';
-        const birthDate = new Date(birthDateStr);
-        const endDate = deathDateStr ? new Date(deathDateStr) : new Date();
-        let age = endDate.getFullYear() - birthDate.getFullYear();
-        const m = endDate.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age >= 0 ? `(Age ${age})` : '';
-    }
-
     // --- Let's get it started! ---
     init();
 });
