@@ -218,8 +218,8 @@ body.hide-notes .connection-note { display: none; }
 .doc-section { display: none; opacity: 0; animation: fade-in 0.5s ease-in-out forwards; }
 .doc-section.is-active { display: block; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.image-placeholder-wrapper { margin-top: 1.5rem; border: 2px solid var(--border-color); border-radius: var(--border-radius-ui); padding: 1rem; background: #fdfdfd; }
-.image-placeholder { width: 100%; height: 300px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; border-radius: var(--border-radius-ui); }
+.image-placeholder-wrapper { display: flex; flex-direction: column; align-items: center; width: auto; margin-top: 1.5rem; border: 2px solid var(--border-color); border-radius: var(--border-radius-ui); padding: 1rem; background: #fdfdfd; }
+.image-placeholder { width: auto; height: auto; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; border-radius: var(--border-radius-ui); }
 .image-placeholder-wrapper figcaption { text-align: center; margin-top: 0.75rem; font-style: italic; color: var(--text-light); }
 
 /* Relationship Manager in Sidebar */
