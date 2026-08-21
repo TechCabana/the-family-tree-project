@@ -10,8 +10,10 @@
 [![Last commit](https://img.shields.io/github/last-commit/TechCabana/the-family-tree-project?style=flat)](https://github.com/TechCabana/the-family-tree-project/commits/main)
 
 [Live site](https://techcabana.github.io/the-family-tree-project/) ·
+[Overview](#overview) ·
 [Installation](#installation) ·
-[Architecture](#architecture)
+[Architecture](#architecture) ·
+[Contributing & Licence](#contributing--licence)
 
 </div>
 
