@@ -1,1 +1,5 @@
 launch.json
+
+# Assistant working-agreement file - describes how the owner works, not how
+# the app runs (W11)
+CLAUDE.md
