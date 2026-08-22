@@ -35,8 +35,6 @@
 
 The project set out to make it easy to sketch a family tree online without an account, a server, or dedicated software: open the page, add people, and the tree draws and saves itself in the browser. It also served as a from-scratch project for building out front-end and product skills.
 
-**TODO(owner):** confirm whether there's a longer-term plan for this project (more relationship types, shared/multi-device trees, a hosted backend) or whether it's meant to stay a single-device demo indefinitely.
-
 ### Scope
 
 | In scope | Not in scope |
@@ -129,13 +127,6 @@ flowchart LR
 3. The current members and connections render into `#tree-layout` as draggable cards, with relationship lines drawn on the `#tree-connections` SVG.
 4. Editing a person or a relationship opens one of the modal forms (`#edit-modal`, `#relationship-modal`). Saving calls `saveDataToLocalStorage()` (`js/main.js:86`), which persists the change.
 5. The **Export Options** menu hands the current tree to `html2canvas`, `jsPDF`, or `html-to-image` (all loaded from CDN in `index.html`) to produce a PNG, PDF, or SVG, or serializes it directly to JSON or CSV.
-
-<details>
-<summary><b>Why this approach, and what was rejected</b></summary>
-
-**TODO(owner):** document the reasoning behind the key choices here, plain JavaScript instead of a framework, `localStorage` instead of a backend, and whatever else was weighed and rejected along the way. That context isn't recoverable from the code alone.
-
-</details>
 
 <details>
 <summary><b>Data model</b></summary>
