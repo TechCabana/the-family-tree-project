@@ -3,3 +3,6 @@ launch.json
 # Assistant working-agreement file - describes how the owner works, not how
 # the app runs (W11)
 CLAUDE.md
+
+# impeccable skill's local design-review config - dev tooling, not runtime (W11)
+.impeccable/

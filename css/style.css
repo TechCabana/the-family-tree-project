@@ -39,7 +39,7 @@ body { display: flex; flex-direction: column; background: linear-gradient(135deg
 .header-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
 .logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem; font-weight: 700; color: var(--green-dark); text-decoration: none; margin-left: 1rem; flex-shrink: 0; }
 .logo i { font-size: 1.8rem; }
-.logo-text { white-space: nowrap; }
+.logo-text { white-space: nowrap; margin: 0; font: inherit; color: inherit; }
 .main-nav { display: flex; justify-content: center; gap: 0.5rem; position: relative; flex: 2; }
 .main-nav a { padding: 0.5rem 1rem; text-decoration: none; color: var(--text-light); font-weight: 700; border-radius: var(--border-radius-ui); transition: all 0.3s ease; position: relative; }
 .main-nav a:hover { color: var(--text-dark); background-color: rgba(0,0,0,0.05); }
@@ -192,7 +192,7 @@ body.hide-notes .connection-note { display: none; }
 .search-results-container { display: none; position: absolute; top: calc(100% + 5px); left: 0; width: 100%; min-width: 250px; background: white; border: 1px solid var(--border-color); border-radius: 0 0 var(--border-radius-ui) var(--border-radius-ui); box-shadow: var(--shadow-lg); max-height: 300px; overflow-y: auto; z-index: 1100; }
 .search-results-container.is-visible { display: block; }
 .search-result-item { padding: 0.75rem 1rem; cursor: pointer; transition: background-color 0.2s; }
-.search-result-item:hover { background-color: #f1f5f9; }
+.search-result-item:hover, .search-result-item[aria-selected="true"] { background-color: #f1f5f9; }
 .search-result-item small { color: var(--text-light); margin-left: 0.5rem; }
 
 /* Toast Notifications */
