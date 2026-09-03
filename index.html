@@ -33,18 +33,18 @@
                 </div>
                 <div class="filter-group">
                     <div class="filter-label-group">
-                        <label for="level-filter">Generation (Ctrl+Click)</label>
+                        <label id="level-filter-label">Generation</label>
                         <div class="multi-select-controls">
                             <button type="button" id="level-select-all" class="btn btn-small" title="Select All"><i class="fa-solid fa-check-double"></i></button>
                             <button type="button" id="level-deselect-all" class="btn btn-small" title="Deselect All"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
-                    <select id="level-filter" multiple>
-                        <option value="0">Great-Grandparents</option>
-                        <option value="1">Grandparents</option>
-                        <option value="2">Parents</option>
-                        <option value="3">Current</option>
-                    </select>
+                    <div class="chip-group" id="level-filter" role="group" aria-labelledby="level-filter-label">
+                        <label class="chip"><input type="checkbox" value="0" checked><span>Great-Grandparents</span></label>
+                        <label class="chip"><input type="checkbox" value="1" checked><span>Grandparents</span></label>
+                        <label class="chip"><input type="checkbox" value="2" checked><span>Parents</span></label>
+                        <label class="chip"><input type="checkbox" value="3" checked><span>Current</span></label>
+                    </div>
                 </div>
                 <div class="filter-group"><label for="role-filter">Relationship Role</label><select id="role-filter"><option value="all">All Roles</option></select></div>
                 <div class="filter-group"><label for="link-filter">Relationship Link</label><select id="link-filter"><option value="all">All Links</option></select></div>

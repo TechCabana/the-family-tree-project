@@ -176,11 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
         
         document.getElementById('level-select-all').addEventListener('click', () => {
-            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
+            document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = true);
             applyFilters();
         });
         document.getElementById('level-deselect-all').addEventListener('click', () => {
-            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = false);
+            document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = false);
             applyFilters();
         });
 
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Read the state of all filters, including the new one
         const tagQuery = document.getElementById('tag-filter').value.toLowerCase();
         const sideQuery = document.getElementById('side-filter').value;
-        const levelQueryValues = Array.from(document.getElementById('level-filter').selectedOptions).map(opt => opt.value);
+        const levelQueryValues = Array.from(document.querySelectorAll('#level-filter input[type="checkbox"]:checked')).map(cb => cb.value);
         const roleQuery = document.getElementById('role-filter').value;
         const linkQuery = document.getElementById('link-filter').value;
         const statusQuery = document.getElementById('status-filter').value;
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetAllFilters(isSilent) {
         document.getElementById('tag-filter').value = '';
         document.getElementById('side-filter').value = 'all';
-        Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
+        document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = true);
         document.getElementById('role-filter').value = 'all';
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
