@@ -44,9 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return names.length > 1 ? names[0][0] + names[names.length - 1][0] : name[0] || '';
     };
 
+    // Values are CSS custom properties, defined in the :root block of css/style.css, so the
+    // palette lives in one place. They resolve at computed-value time, so getComputedStyle
+    // (and therefore html2canvas / html-to-image on export) sees the real colour.
     const tagColors = {
-        default: '#4299e1', Military: '#ed8936', Artist: '#9f7aea', Entrepreneur: '#38b2ac', 
-        Education: '#48bb78', Healthcare: '#f56565', Craftsman: '#8b4513', Tech: '#3182ce',
+        default: 'var(--tag-default)', Military: 'var(--tag-military)', Artist: 'var(--tag-artist)', Entrepreneur: 'var(--tag-entrepreneur)',
+        Education: 'var(--tag-education)', Healthcare: 'var(--tag-healthcare)', Craftsman: 'var(--tag-craftsman)', Tech: 'var(--tag-tech)',
     };
 
     const getTagColor = (tag) => tagColors[tag] || tagColors.default;
@@ -103,11 +106,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA PERSISTENCE FUNCTIONS ---
     function saveDataToLocalStorage() {
         localStorage.setItem('familyTreeData', JSON.stringify(familyData));
+        maybeShowBackupReminder();
     }
 
     function loadDataFromLocalStorage() {
         const data = localStorage.getItem('familyTreeData');
         return data ? JSON.parse(data) : null;
+    }
+
+    const BACKUP_REMINDER_THRESHOLD = 5;
+
+    function maybeShowBackupReminder() {
+        const banner = document.getElementById('backup-reminder');
+        if (!banner) return;
+        const memberCount = familyData.members.length;
+        const lastDismissedCount = parseInt(localStorage.getItem('backupReminderDismissedAt') || '0', 10);
+        const shouldShow = memberCount >= BACKUP_REMINDER_THRESHOLD && memberCount - lastDismissedCount >= BACKUP_REMINDER_THRESHOLD;
+        banner.classList.toggle('is-visible', shouldShow);
+    }
+
+    function dismissBackupReminder() {
+        const banner = document.getElementById('backup-reminder');
+        if (banner) banner.classList.remove('is-visible');
+        localStorage.setItem('backupReminderDismissedAt', String(familyData.members.length));
     }
 
     // --- INITIALIZATION ---
@@ -197,6 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('link-filter').addEventListener('change', applyFilters);
         document.getElementById('status-filter').addEventListener('change', applyFilters);
         
+        document.getElementById('backup-reminder-export').addEventListener('click', () => {
+            exportJson();
+            dismissBackupReminder();
+        });
+        document.getElementById('backup-reminder-dismiss').addEventListener('click', dismissBackupReminder);
+
         document.getElementById('globalResetBtn').addEventListener('click', resetApplicationToDemoState);
         document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
         emptyStateMessage.addEventListener('click', () => openEditModal());
@@ -601,6 +628,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 card.querySelector('.edit-button').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(member.id); });
                 card.addEventListener('dblclick', () => openEditModal(member.id));
+                card.tabIndex = 0;
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${member.name}, press Enter to edit`);
+                card.addEventListener('keydown', handleCardKeydown);
                 generationDiv.appendChild(card);
             });
             treeLayout.appendChild(generationDiv);
@@ -608,20 +639,39 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => drawConnections(connectionsToRender), 50);
     }
     
+    function handleCardKeydown(e) {
+        const card = e.currentTarget;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            openEditModal(parseInt(card.dataset.id));
+            return;
+        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const cards = Array.from(document.querySelectorAll('.member-card'));
+            const index = cards.indexOf(card);
+            const delta = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
+            const next = cards[index + delta];
+            if (next) next.focus();
+        }
+    }
+
     function drawConnections(connectionsToRender) {
         connectionsSVG.innerHTML = '';
         annotationsContainer.innerHTML = '';
         const showNotes = document.getElementById('toggle-notes').checked;
+        const containerRect = treeContainer.getBoundingClientRect();
+        const cardsById = new Map();
+        document.querySelectorAll('.member-card').forEach(card => cardsById.set(card.dataset.id, card));
 
         (connectionsToRender || []).forEach(conn => {
             const [fromId, toId] = conn.members;
-            const fromCard = document.querySelector(`.member-card[data-id='${fromId}']`);
-            const toCard = document.querySelector(`.member-card[data-id='${toId}']`);
+            const fromCard = cardsById.get(String(fromId));
+            const toCard = cardsById.get(String(toId));
             if (!fromCard || !toCard) return;
 
             const fromRect = fromCard.getBoundingClientRect();
             const toRect = toCard.getBoundingClientRect();
-            const containerRect = treeContainer.getBoundingClientRect();
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d = '', midX, midY;
 
@@ -642,12 +692,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     [midX, midY] = [(fromX + toX) / 2, fromY];
                 }
             } else if (conn.link === 'Parent') {
-                const pRect = fromCard.getBoundingClientRect();
-                const cRect = toCard.getBoundingClientRect();
-                const fromX = (pRect.left + pRect.right) / 2 - containerRect.left;
-                const fromY = pRect.bottom - containerRect.top;
-                const toX = (cRect.left + cRect.right) / 2 - containerRect.left;
-                const toY = cRect.top - containerRect.top;
+                const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
+                const fromY = fromRect.bottom - containerRect.top;
+                const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
+                const toY = toRect.top - containerRect.top;
                 const ctrlY = fromY + (toY - fromY) / 2;
                 d = `M ${fromX} ${fromY} C ${fromX} ${ctrlY}, ${toX} ${ctrlY}, ${toX} ${toY}`;
                 [midX, midY] = [(fromX + toX) / 2, ctrlY];
@@ -892,9 +940,10 @@ document.addEventListener('DOMContentLoaded', () => {
         toSelect.innerHTML = options;
 
         listContainer.innerHTML = '';
+        const membersById = new Map(familyData.members.map(m => [m.id, m]));
         (familyData.connections || []).forEach(conn => {
-            const fromMember = familyData.members.find(m => m.id === conn.members[0]);
-            const toMember = familyData.members.find(m => m.id === conn.members[1]);
+            const fromMember = membersById.get(conn.members[0]);
+            const toMember = membersById.get(conn.members[1]);
             if (!fromMember || !toMember) return;
             
             const item = document.createElement('div');
@@ -1006,6 +1055,16 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.scrollLeft = scrollLeft - (x - startX);
             canvas.scrollTop = scrollTop - (y - startY);
         });
+        canvas.addEventListener('keydown', (e) => {
+            if (e.target !== canvas) return;
+            const panStep = 40;
+            if (e.key === 'ArrowLeft') { e.preventDefault(); canvas.scrollLeft -= panStep; }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); canvas.scrollLeft += panStep; }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); canvas.scrollTop -= panStep; }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); canvas.scrollTop += panStep; }
+            else if (e.key === '+' || e.key === '=') { e.preventDefault(); updateZoom(0.1); }
+            else if (e.key === '-') { e.preventDefault(); updateZoom(-0.1); }
+        });
     }
 
     // --- DATA MANAGEMENT & EXPORT ---
@@ -1018,6 +1077,14 @@ document.addEventListener('DOMContentLoaded', () => {
         linkElement.click();
     }
 
+    function isValidTreeData(data) {
+        if (!data || typeof data !== 'object') return false;
+        if (!Array.isArray(data.members) || !Array.isArray(data.connections)) return false;
+        const validMember = (m) => m && typeof m === 'object' && typeof m.id !== 'undefined' && typeof m.name === 'string' && m.name.trim() !== '';
+        const validConnection = (c) => c && typeof c === 'object' && Array.isArray(c.members) && c.members.length === 2 && typeof c.link === 'string';
+        return data.members.every(validMember) && data.connections.every(validConnection);
+    }
+
     function importJson(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -1025,15 +1092,15 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (e) => {
             try {
                 const importedData = JSON.parse(e.target.result);
-                if (importedData.members && importedData.connections) {
+                if (isValidTreeData(importedData)) {
                     familyData = importedData;
-                    saveDataToLocalStorage(); 
+                    saveDataToLocalStorage();
                     resetAllFilters(true);
                 } else {
-                    alert('Error: Invalid JSON file format.');
+                    alert('Error: This file is not a valid family tree export. Your current tree has not been changed.');
                 }
             } catch (error) {
-                alert('Error parsing JSON file.');
+                alert('Error: Could not read this file as JSON. Your current tree has not been changed.');
                 console.error("JSON Parse Error:", error);
             }
         };

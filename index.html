@@ -7,13 +7,20 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
     <div class="leaves-container" id="leaves-container"></div>
     <div id="app-overlay"></div>
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="backup-reminder" id="backup-reminder" role="status">
+        <p>Your tree only lives in this browser. Export a backup so you don't lose it.</p>
+        <div class="backup-reminder-actions">
+            <button type="button" id="backup-reminder-export" class="backup-reminder-export">Export Backup</button>
+            <button type="button" id="backup-reminder-dismiss" class="backup-reminder-dismiss" aria-label="Dismiss">&times;</button>
+        </div>
+    </div>
     
     <aside id="controls-bar" class="controls-sidebar">
         <div class="sidebar-header">
@@ -137,7 +144,7 @@
             <a href="about.html">About</a>
         </div>
 
-        <main class="main-canvas" id="main-canvas">
+        <main class="main-canvas" id="main-canvas" tabindex="0" aria-label="Family tree canvas. Use arrow keys to pan, plus and minus to zoom, when this area is focused.">
             <div class="tree-container" id="tree-container">
                 <div id="empty-state-message">
                     <i class="fa-solid fa-plus"></i>
