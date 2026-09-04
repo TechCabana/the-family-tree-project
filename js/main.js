@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentViewMembers = [];
     let currentViewConnections = [];
     let scale = 1;
+    let lastFocusedElement = null;
+    let searchActiveIndex = -1;
 
     // --- STATIC DATA FOR DROPDOWNS ---
     const relationshipRoles = ["Son", "Daughter", "Father", "Mother", "Grandfather", "Grandmother", "Great-Grandfather", "Great-Grandmother", "Step-Father", "Step-Mother"];
@@ -56,6 +58,22 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     };
+
+    function getFocusableElements(container) {
+        return Array.from(container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+            .filter(el => !el.disabled && el.offsetParent !== null);
+    }
+
+    function openModalFocus(modalEl) {
+        lastFocusedElement = document.activeElement;
+        const focusable = getFocusableElements(modalEl);
+        (focusable[0] || modalEl).focus();
+    }
+
+    function closeModalFocus() {
+        if (lastFocusedElement) lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 
     function debounce(func, delay) {
         let timeout;
@@ -145,14 +163,30 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', handleSearchInput);
         searchInput.addEventListener('focus', handleSearchInput);
         searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            const resultsContainer = document.getElementById('search-results');
+            const items = Array.from(resultsContainer.querySelectorAll('.search-result-item[data-id]'));
+            if (e.key === 'ArrowDown') {
+                if (!items.length) return;
                 e.preventDefault();
-                const firstResult = document.querySelector('#search-results .search-result-item');
-                if (firstResult && firstResult.dataset.id) {
-                    focusOnMember(parseInt(firstResult.dataset.id));
+                searchActiveIndex = (searchActiveIndex + 1) % items.length;
+                updateSearchActiveItem(items);
+            } else if (e.key === 'ArrowUp') {
+                if (!items.length) return;
+                e.preventDefault();
+                searchActiveIndex = (searchActiveIndex - 1 + items.length) % items.length;
+                updateSearchActiveItem(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const target = items[searchActiveIndex] || items[0];
+                if (target && target.dataset.id) {
+                    focusOnMember(parseInt(target.dataset.id));
                     searchInput.value = '';
-                    document.getElementById('search-results').classList.remove('is-visible');
+                    resultsContainer.classList.remove('is-visible');
+                    searchActiveIndex = -1;
                 }
+            } else if (e.key === 'Escape') {
+                resultsContainer.classList.remove('is-visible');
+                searchActiveIndex = -1;
             }
         });
 
@@ -176,11 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('relationship-form-sidebar').addEventListener('submit', handleRelationshipForm);
         
         document.getElementById('level-select-all').addEventListener('click', () => {
-            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
+            document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = true);
             applyFilters();
         });
         document.getElementById('level-deselect-all').addEventListener('click', () => {
-            Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = false);
+            document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = false);
             applyFilters();
         });
 
@@ -202,6 +236,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('relationship-modal-cancel-btn').addEventListener('click', closeRelationshipModal);
         document.getElementById('delete-relationship-btn').addEventListener('click', deleteRelationship);
         document.querySelector('#relationship-modal .modal-close-btn').addEventListener('click', closeRelationshipModal);
+
+        document.addEventListener('keydown', (e) => {
+            const relationshipModalEl = document.getElementById('relationship-modal');
+            const openModalEl = editModal.classList.contains('visible') ? editModal :
+                (relationshipModalEl.classList.contains('visible') ? relationshipModalEl : null);
+            if (!openModalEl) return;
+            if (e.key === 'Escape') {
+                if (openModalEl === editModal) closeModal(); else closeRelationshipModal();
+                return;
+            }
+            if (e.key === 'Tab') {
+                const focusable = getFocusableElements(openModalEl);
+                if (!focusable.length) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        });
 
         document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('json-file-input').click());
         document.getElementById('json-file-input').addEventListener('change', importJson);
@@ -297,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSearchResults(results) {
         const resultsContainer = document.getElementById('search-results');
         resultsContainer.innerHTML = '';
+        searchActiveIndex = -1;
 
         if (results.length === 0) {
             resultsContainer.innerHTML = `<div class="search-result-item">No results found</div>`;
@@ -304,6 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
             results.forEach(member => {
                 const item = document.createElement('div');
                 item.className = 'search-result-item';
+                item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', 'false');
                 item.dataset.id = member.id;
                 item.innerHTML = `${member.name} <small>(${member.relationship || ''})</small>`;
                 item.addEventListener('click', () => {
@@ -315,6 +376,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         resultsContainer.classList.add('is-visible');
+    }
+
+    function updateSearchActiveItem(items) {
+        items.forEach((item, idx) => item.setAttribute('aria-selected', idx === searchActiveIndex ? 'true' : 'false'));
+        const active = items[searchActiveIndex];
+        if (active) active.scrollIntoView({ block: 'nearest' });
     }
 
     function focusOnMember(memberId) {
@@ -341,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Read the state of all filters, including the new one
         const tagQuery = document.getElementById('tag-filter').value.toLowerCase();
         const sideQuery = document.getElementById('side-filter').value;
-        const levelQueryValues = Array.from(document.getElementById('level-filter').selectedOptions).map(opt => opt.value);
+        const levelQueryValues = Array.from(document.querySelectorAll('#level-filter input[type="checkbox"]:checked')).map(cb => cb.value);
         const roleQuery = document.getElementById('role-filter').value;
         const linkQuery = document.getElementById('link-filter').value;
         const statusQuery = document.getElementById('status-filter').value;
@@ -388,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetAllFilters(isSilent) {
         document.getElementById('tag-filter').value = '';
         document.getElementById('side-filter').value = 'all';
-        Array.from(document.getElementById('level-filter').options).forEach(opt => opt.selected = true);
+        document.querySelectorAll('#level-filter input[type="checkbox"]').forEach(cb => cb.checked = true);
         document.getElementById('role-filter').value = 'all';
         document.getElementById('link-filter').value = 'all';
         document.getElementById('status-filter').value = 'all';
@@ -642,9 +709,10 @@ document.addEventListener('DOMContentLoaded', () => {
             modalAvatarInitials.style.display = 'flex';
         }
         editModal.classList.add('visible');
+        openModalFocus(editModal);
     }
 
-    function closeModal() { editModal.classList.remove('visible'); }
+    function closeModal() { editModal.classList.remove('visible'); closeModalFocus(); }
 
     function saveMember() {
         const id = parseInt(memberIdInput.value);
@@ -734,9 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('relToRoleModalLabel').textContent = `${toMember.name}'s Role`;
         
         modal.classList.add('visible');
+        openModalFocus(modal);
     }
 
-    function closeRelationshipModal() { document.getElementById('relationship-modal').classList.remove('visible'); }
+    function closeRelationshipModal() { document.getElementById('relationship-modal').classList.remove('visible'); closeModalFocus(); }
 
     function saveRelationship() {
         const id = document.getElementById('relationshipId').value;

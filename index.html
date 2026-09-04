@@ -13,12 +13,12 @@
 <body>
     <div class="leaves-container" id="leaves-container"></div>
     <div id="app-overlay"></div>
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
     
     <aside id="controls-bar" class="controls-sidebar">
         <div class="sidebar-header">
             <h3>Controls</h3>
-            <button id="close-controls-btn" class="ui-icon-btn close-btn">&times;</button>
+            <button id="close-controls-btn" class="ui-icon-btn close-btn" aria-label="Close controls">&times;</button>
         </div>
         <div class="sidebar-content">
             <div class="control-section">
@@ -33,18 +33,18 @@
                 </div>
                 <div class="filter-group">
                     <div class="filter-label-group">
-                        <label for="level-filter">Generation (Ctrl+Click)</label>
+                        <label id="level-filter-label">Generation</label>
                         <div class="multi-select-controls">
-                            <button type="button" id="level-select-all" class="btn btn-small" title="Select All"><i class="fa-solid fa-check-double"></i></button>
-                            <button type="button" id="level-deselect-all" class="btn btn-small" title="Deselect All"><i class="fa-solid fa-xmark"></i></button>
+                            <button type="button" id="level-select-all" class="btn btn-small" title="Select All" aria-label="Select all generations"><i class="fa-solid fa-check-double"></i></button>
+                            <button type="button" id="level-deselect-all" class="btn btn-small" title="Deselect All" aria-label="Deselect all generations"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
-                    <select id="level-filter" multiple>
-                        <option value="0">Great-Grandparents</option>
-                        <option value="1">Grandparents</option>
-                        <option value="2">Parents</option>
-                        <option value="3">Current</option>
-                    </select>
+                    <div class="chip-group" id="level-filter" role="group" aria-labelledby="level-filter-label">
+                        <label class="chip"><input type="checkbox" value="0" checked><span>Great-Grandparents</span></label>
+                        <label class="chip"><input type="checkbox" value="1" checked><span>Grandparents</span></label>
+                        <label class="chip"><input type="checkbox" value="2" checked><span>Parents</span></label>
+                        <label class="chip"><input type="checkbox" value="3" checked><span>Current</span></label>
+                    </div>
                 </div>
                 <div class="filter-group"><label for="role-filter">Relationship Role</label><select id="role-filter"><option value="all">All Roles</option></select></div>
                 <div class="filter-group"><label for="link-filter">Relationship Link</label><select id="link-filter"><option value="all">All Links</option></select></div>
@@ -57,10 +57,10 @@
                 <div class="toggle-group"><label for="toggle-notes">Show Relationship Notes</label><label class="toggle-switch"><input type="checkbox" id="toggle-notes" checked><span class="slider"></span></label></div>
                 <div class="toggle-group"><label for="toggle-deceased">Show Deceased</label><label class="toggle-switch"><input type="checkbox" id="toggle-deceased" checked><span class="slider"></span></label></div>
                 <div class="legend">
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span>Parent</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--blue);"></span>Sibling</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--orange);"></span>Spouse</div>
-                    <div class="legend-item"><span class="color-swatch" style="background: var(--teal);"></span>Partner</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--green-dark);"></span><span class="line-swatch parent"></span>Parent</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--blue);"></span><span class="line-swatch sibling"></span>Sibling</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--orange);"></span><span class="line-swatch spouse"></span>Spouse</div>
+                    <div class="legend-item"><span class="color-swatch" style="background: var(--teal);"></span><span class="line-swatch partner"></span>Partner</div>
                 </div>
             </div>
             <div class="control-section" id="people-manager">
@@ -105,12 +105,12 @@
     <div class="app-container">
         <header class="app-header">
             <div class="header-left">
-                <button class="ui-icon-btn" id="toggle-controls-btn" title="Toggle Controls">
+                <button class="ui-icon-btn" id="toggle-controls-btn" title="Toggle Controls" aria-label="Toggle controls">
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <a href="index.html" class="logo">
                     <i class="fa-solid fa-tree"></i>
-                    <span class="logo-text">The Family Tree Project</span>
+                    <h1 class="logo-text">The Family Tree Project</h1>
                 </a>
             </div>
             <nav class="main-nav">
@@ -122,16 +122,16 @@
                 <div class="search-container">
                     <i class="fa-solid fa-search"></i>
                     <input type="search" id="search-member" placeholder="Focus on a person..." autocomplete="off">
-                    <div id="search-results" class="search-results-container"></div>
+                    <div id="search-results" class="search-results-container" role="listbox"></div>
                 </div>
-                <button class="ui-icon-btn mobile-only" id="mobile-nav-toggle">
+                <button class="ui-icon-btn mobile-only" id="mobile-nav-toggle" aria-label="Open menu">
                     <i class="fa-solid fa-ellipsis-v"></i>
                 </button>
             </div>
         </header>
 
         <div id="mobile-nav-overlay" class="mobile-nav">
-            <button id="mobile-nav-close" class="ui-icon-btn close-btn">&times;</button>
+            <button id="mobile-nav-close" class="ui-icon-btn close-btn" aria-label="Close menu">&times;</button>
             <a href="index.html">Home</a>
             <a href="how-to.html">How To</a>
             <a href="about.html">About</a>
@@ -151,23 +151,23 @@
         
         <div class="ui-controls">
             <div class="view-controls">
-                <button class="ui-icon-btn" id="globalResetBtn" title="Reset View & Filters"><i class="fa-solid fa-arrows-rotate"></i></button>
-                <button class="ui-icon-btn" id="fullscreenBtn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
-                <button class="ui-icon-btn btn-danger" id="clearDataBtn" title="Clear All Data"><i class="fa-solid fa-trash"></i></button>
+                <button class="ui-icon-btn" id="globalResetBtn" title="Reset View & Filters" aria-label="Reset view and filters"><i class="fa-solid fa-arrows-rotate"></i></button>
+                <button class="ui-icon-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+                <button class="ui-icon-btn btn-danger" id="clearDataBtn" title="Clear All Data" aria-label="Clear all data"><i class="fa-solid fa-trash"></i></button>
             </div>
             <div class="zoom-controls">
-                <button id="zoomOutBtn"><i class="fa-solid fa-minus"></i></button>
+                <button id="zoomOutBtn" aria-label="Zoom out"><i class="fa-solid fa-minus"></i></button>
                 <span id="zoom-level">100%</span>
-                <button id="zoomInBtn"><i class="fa-solid fa-plus"></i></button>
+                <button id="zoomInBtn" aria-label="Zoom in"><i class="fa-solid fa-plus"></i></button>
             </div>
         </div>
     </div>
     
-    <div class="modal-overlay" id="edit-modal">
+    <div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="modal-title">Edit Family Member</h2>
-                <button class="modal-close-btn">&times;</button>
+                <button class="modal-close-btn" aria-label="Close">&times;</button>
             </div>
             <div class="modal-body">
                 <aside class="modal-sidebar">
@@ -201,11 +201,11 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="relationship-modal">
+    <div class="modal-overlay" id="relationship-modal" role="dialog" aria-modal="true" aria-labelledby="relationship-modal-title">
         <div class="modal-content small">
             <div class="modal-header">
                 <h2 class="modal-title" id="relationship-modal-title">Edit Relationship</h2>
-                <button class="modal-close-btn">&times;</button>
+                <button class="modal-close-btn" aria-label="Close">&times;</button>
             </div>
             <form id="relationship-form-modal">
                 <div class="modal-body">
@@ -229,7 +229,7 @@
     
     <template id="member-card-template">
         <div class="member-card" draggable="true">
-            <button class="edit-button"><i class="fa-solid fa-pencil"></i></button>
+            <button class="edit-button" aria-label="Edit member"><i class="fa-solid fa-pencil"></i></button>
             <div class="member-avatar">
                 <img class="avatar-img" src="" alt="">
                 <span class="avatar-initials"></span>
@@ -244,7 +244,7 @@
     </template>
     
     <div id="coach-mark-clear" class="coach-mark">
-        <button id="coach-mark-close" class="close-btn">&times;</button>
+        <button id="coach-mark-close" class="close-btn" aria-label="Dismiss tip">&times;</button>
         <div class="coach-mark-text">
             <strong>Play around with the demo!</strong>
             <p>When you're ready to start your own tree, click here to clear the board.</p>

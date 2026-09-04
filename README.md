@@ -100,6 +100,26 @@ You should see a demo family tree already drawn on the canvas, four generations 
 | Automation | None | No CI configured |
 | Testing | None | No test suite in the repo |
 
+### Why this approach, and what was rejected
+
+**Vanilla JavaScript, no framework, no build step.** This project doubles as a from-scratch
+exercise in front-end fundamentals, and a framework or bundler would trade that learning value
+for conveniences a small, single-page app doesn't need. It also means the repo runs from any
+static file server with nothing to install and nothing to keep upgraded.
+
+**`localStorage` instead of a backend.** No account, no server, and no data ever leaves the
+browser that created it. A backend was considered and rejected: this is a single-maintainer,
+zero-budget, zero-traffic personal project, and a free static site people use over the web
+already satisfies the goal of a free, accessible tool without the ongoing cost and complexity of
+hosting infrastructure, accounts, or sync. That tradeoff is a real limitation — a browser cache
+clear with no export backup loses the tree — and is tracked as its own concern rather than solved
+by adding a server. If real multi-device demand ever shows up, an optional cloud-backup tier (no
+required signup) is the fallback direction, not full accounts.
+
+**Export libraries loaded from CDN, no bundler.** `html2canvas`, `jsPDF`, and `html-to-image` are
+pulled in directly by `index.html` rather than installed and bundled, so the "no build step"
+promise holds even for a feature that would normally justify one.
+
 ### How the pieces fit
 
 ```mermaid
