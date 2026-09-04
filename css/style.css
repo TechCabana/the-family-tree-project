@@ -273,7 +273,7 @@ body.hide-notes .connection-note { display: none; }
 .doc-section.is-active { display: block; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .image-placeholder-wrapper { display: flex; flex-direction: column; align-items: center; width: auto; margin-top: 1.5rem; border: 2px solid var(--border-color); border-radius: var(--border-radius-ui); padding: 1rem; background-color: var(--bg-card); }
-.image-placeholder { width: auto; height: auto; background-color: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; border-radius: var(--border-radius-ui); }
+.image-placeholder { max-width: 100%; height: auto; background-color: var(--bg-hover); display: flex; align-items: center; justify-content: center; color: var(--text-light); font-weight: 600; border-radius: var(--border-radius-ui); }
 .image-placeholder-wrapper figcaption { text-align: center; margin-top: 0.75rem; font-style: italic; color: var(--text-light); }
 
 /* Relationship Manager in Sidebar */
