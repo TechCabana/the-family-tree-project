@@ -14,6 +14,13 @@
     <div class="leaves-container" id="leaves-container"></div>
     <div id="app-overlay"></div>
     <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="backup-reminder" id="backup-reminder" role="status">
+        <p>Your tree only lives in this browser. Export a backup so you don't lose it.</p>
+        <div class="backup-reminder-actions">
+            <button type="button" id="backup-reminder-export" class="backup-reminder-export">Export Backup</button>
+            <button type="button" id="backup-reminder-dismiss" class="backup-reminder-dismiss" aria-label="Dismiss">&times;</button>
+        </div>
+    </div>
     
     <aside id="controls-bar" class="controls-sidebar">
         <div class="sidebar-header">

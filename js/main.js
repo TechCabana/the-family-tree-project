@@ -103,11 +103,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA PERSISTENCE FUNCTIONS ---
     function saveDataToLocalStorage() {
         localStorage.setItem('familyTreeData', JSON.stringify(familyData));
+        maybeShowBackupReminder();
     }
 
     function loadDataFromLocalStorage() {
         const data = localStorage.getItem('familyTreeData');
         return data ? JSON.parse(data) : null;
+    }
+
+    const BACKUP_REMINDER_THRESHOLD = 5;
+
+    function maybeShowBackupReminder() {
+        const banner = document.getElementById('backup-reminder');
+        if (!banner) return;
+        const memberCount = familyData.members.length;
+        const lastDismissedCount = parseInt(localStorage.getItem('backupReminderDismissedAt') || '0', 10);
+        const shouldShow = memberCount >= BACKUP_REMINDER_THRESHOLD && memberCount - lastDismissedCount >= BACKUP_REMINDER_THRESHOLD;
+        banner.classList.toggle('is-visible', shouldShow);
+    }
+
+    function dismissBackupReminder() {
+        const banner = document.getElementById('backup-reminder');
+        if (banner) banner.classList.remove('is-visible');
+        localStorage.setItem('backupReminderDismissedAt', String(familyData.members.length));
     }
 
     // --- INITIALIZATION ---
@@ -197,6 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('link-filter').addEventListener('change', applyFilters);
         document.getElementById('status-filter').addEventListener('change', applyFilters);
         
+        document.getElementById('backup-reminder-export').addEventListener('click', () => {
+            exportJson();
+            dismissBackupReminder();
+        });
+        document.getElementById('backup-reminder-dismiss').addEventListener('click', dismissBackupReminder);
+
         document.getElementById('globalResetBtn').addEventListener('click', resetApplicationToDemoState);
         document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
         emptyStateMessage.addEventListener('click', () => openEditModal());
