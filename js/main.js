@@ -44,9 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return names.length > 1 ? names[0][0] + names[names.length - 1][0] : name[0] || '';
     };
 
+    // Values are CSS custom properties, defined in the :root block of css/style.css, so the
+    // palette lives in one place. They resolve at computed-value time, so getComputedStyle
+    // (and therefore html2canvas / html-to-image on export) sees the real colour.
     const tagColors = {
-        default: '#4299e1', Military: '#ed8936', Artist: '#9f7aea', Entrepreneur: '#38b2ac', 
-        Education: '#48bb78', Healthcare: '#f56565', Craftsman: '#8b4513', Tech: '#3182ce',
+        default: 'var(--tag-default)', Military: 'var(--tag-military)', Artist: 'var(--tag-artist)', Entrepreneur: 'var(--tag-entrepreneur)',
+        Education: 'var(--tag-education)', Healthcare: 'var(--tag-healthcare)', Craftsman: 'var(--tag-craftsman)', Tech: 'var(--tag-tech)',
     };
 
     const getTagColor = (tag) => tagColors[tag] || tagColors.default;
