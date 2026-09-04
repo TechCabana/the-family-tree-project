@@ -625,6 +625,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 card.querySelector('.edit-button').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(member.id); });
                 card.addEventListener('dblclick', () => openEditModal(member.id));
+                card.tabIndex = 0;
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${member.name}, press Enter to edit`);
+                card.addEventListener('keydown', handleCardKeydown);
                 generationDiv.appendChild(card);
             });
             treeLayout.appendChild(generationDiv);
@@ -632,6 +636,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => drawConnections(connectionsToRender), 50);
     }
     
+    function handleCardKeydown(e) {
+        const card = e.currentTarget;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            openEditModal(parseInt(card.dataset.id));
+            return;
+        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const cards = Array.from(document.querySelectorAll('.member-card'));
+            const index = cards.indexOf(card);
+            const delta = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
+            const next = cards[index + delta];
+            if (next) next.focus();
+        }
+    }
+
     function drawConnections(connectionsToRender) {
         connectionsSVG.innerHTML = '';
         annotationsContainer.innerHTML = '';
@@ -1029,6 +1050,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = e.pageX - canvas.offsetLeft, y = e.pageY - canvas.offsetTop;
             canvas.scrollLeft = scrollLeft - (x - startX);
             canvas.scrollTop = scrollTop - (y - startY);
+        });
+        canvas.addEventListener('keydown', (e) => {
+            if (e.target !== canvas) return;
+            const panStep = 40;
+            if (e.key === 'ArrowLeft') { e.preventDefault(); canvas.scrollLeft -= panStep; }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); canvas.scrollLeft += panStep; }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); canvas.scrollTop -= panStep; }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); canvas.scrollTop += panStep; }
+            else if (e.key === '+' || e.key === '=') { e.preventDefault(); updateZoom(0.1); }
+            else if (e.key === '-') { e.preventDefault(); updateZoom(-0.1); }
         });
     }
 
