@@ -660,16 +660,18 @@ document.addEventListener('DOMContentLoaded', () => {
         connectionsSVG.innerHTML = '';
         annotationsContainer.innerHTML = '';
         const showNotes = document.getElementById('toggle-notes').checked;
+        const containerRect = treeContainer.getBoundingClientRect();
+        const cardsById = new Map();
+        document.querySelectorAll('.member-card').forEach(card => cardsById.set(card.dataset.id, card));
 
         (connectionsToRender || []).forEach(conn => {
             const [fromId, toId] = conn.members;
-            const fromCard = document.querySelector(`.member-card[data-id='${fromId}']`);
-            const toCard = document.querySelector(`.member-card[data-id='${toId}']`);
+            const fromCard = cardsById.get(String(fromId));
+            const toCard = cardsById.get(String(toId));
             if (!fromCard || !toCard) return;
 
             const fromRect = fromCard.getBoundingClientRect();
             const toRect = toCard.getBoundingClientRect();
-            const containerRect = treeContainer.getBoundingClientRect();
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d = '', midX, midY;
 
@@ -690,12 +692,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     [midX, midY] = [(fromX + toX) / 2, fromY];
                 }
             } else if (conn.link === 'Parent') {
-                const pRect = fromCard.getBoundingClientRect();
-                const cRect = toCard.getBoundingClientRect();
-                const fromX = (pRect.left + pRect.right) / 2 - containerRect.left;
-                const fromY = pRect.bottom - containerRect.top;
-                const toX = (cRect.left + cRect.right) / 2 - containerRect.left;
-                const toY = cRect.top - containerRect.top;
+                const fromX = (fromRect.left + fromRect.right) / 2 - containerRect.left;
+                const fromY = fromRect.bottom - containerRect.top;
+                const toX = (toRect.left + toRect.right) / 2 - containerRect.left;
+                const toY = toRect.top - containerRect.top;
                 const ctrlY = fromY + (toY - fromY) / 2;
                 d = `M ${fromX} ${fromY} C ${fromX} ${ctrlY}, ${toX} ${ctrlY}, ${toX} ${toY}`;
                 [midX, midY] = [(fromX + toX) / 2, ctrlY];
