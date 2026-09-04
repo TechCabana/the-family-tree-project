@@ -940,9 +940,10 @@ document.addEventListener('DOMContentLoaded', () => {
         toSelect.innerHTML = options;
 
         listContainer.innerHTML = '';
+        const membersById = new Map(familyData.members.map(m => [m.id, m]));
         (familyData.connections || []).forEach(conn => {
-            const fromMember = familyData.members.find(m => m.id === conn.members[0]);
-            const toMember = familyData.members.find(m => m.id === conn.members[1]);
+            const fromMember = membersById.get(conn.members[0]);
+            const toMember = membersById.get(conn.members[1]);
             if (!fromMember || !toMember) return;
             
             const item = document.createElement('div');
