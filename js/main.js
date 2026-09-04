@@ -1018,6 +1018,14 @@ document.addEventListener('DOMContentLoaded', () => {
         linkElement.click();
     }
 
+    function isValidTreeData(data) {
+        if (!data || typeof data !== 'object') return false;
+        if (!Array.isArray(data.members) || !Array.isArray(data.connections)) return false;
+        const validMember = (m) => m && typeof m === 'object' && typeof m.id !== 'undefined' && typeof m.name === 'string' && m.name.trim() !== '';
+        const validConnection = (c) => c && typeof c === 'object' && Array.isArray(c.members) && c.members.length === 2 && typeof c.link === 'string';
+        return data.members.every(validMember) && data.connections.every(validConnection);
+    }
+
     function importJson(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -1025,15 +1033,15 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (e) => {
             try {
                 const importedData = JSON.parse(e.target.result);
-                if (importedData.members && importedData.connections) {
+                if (isValidTreeData(importedData)) {
                     familyData = importedData;
-                    saveDataToLocalStorage(); 
+                    saveDataToLocalStorage();
                     resetAllFilters(true);
                 } else {
-                    alert('Error: Invalid JSON file format.');
+                    alert('Error: This file is not a valid family tree export. Your current tree has not been changed.');
                 }
             } catch (error) {
-                alert('Error parsing JSON file.');
+                alert('Error: Could not read this file as JSON. Your current tree has not been changed.');
                 console.error("JSON Parse Error:", error);
             }
         };
