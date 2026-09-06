@@ -1055,6 +1055,42 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.scrollLeft = scrollLeft - (x - startX);
             canvas.scrollTop = scrollTop - (y - startY);
         });
+
+        // Touch: single-finger drag-to-pan, two-finger pinch-to-zoom
+        let isTouchPanning = false, pinchStartDist = null;
+        const touchDist = (touches) => Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                isTouchPanning = false;
+                pinchStartDist = touchDist(e.touches);
+            } else if (e.touches.length === 1 && e.target === canvas) {
+                isTouchPanning = true;
+                const t = e.touches[0];
+                startX = t.pageX - canvas.offsetLeft; startY = t.pageY - canvas.offsetTop;
+                scrollLeft = canvas.scrollLeft; scrollTop = canvas.scrollTop;
+            }
+        }, { passive: true });
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchStartDist !== null) {
+                e.preventDefault();
+                const dist = touchDist(e.touches);
+                updateZoom((dist - pinchStartDist) * 0.005);
+                pinchStartDist = dist;
+            } else if (isTouchPanning && e.touches.length === 1) {
+                e.preventDefault();
+                const t = e.touches[0];
+                const x = t.pageX - canvas.offsetLeft, y = t.pageY - canvas.offsetTop;
+                canvas.scrollLeft = scrollLeft - (x - startX);
+                canvas.scrollTop = scrollTop - (y - startY);
+            }
+        }, { passive: false });
+        const endTouch = (e) => {
+            if (e.touches.length < 2) pinchStartDist = null;
+            if (e.touches.length === 0) isTouchPanning = false;
+        };
+        canvas.addEventListener('touchend', endTouch);
+        canvas.addEventListener('touchcancel', endTouch);
+
         canvas.addEventListener('keydown', (e) => {
             if (e.target !== canvas) return;
             const panStep = 40;
