@@ -901,8 +901,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <small class="item-details">${member.relationship || ''}</small>
                 </div>
                 <div class="actions">
-                    <button data-id="${member.id}" class="edit-person" title="Edit Person"><i class="fa-solid fa-pencil"></i></button>
-                    <button data-id="${member.id}" class="delete-person" title="Delete Person"><i class="fa-solid fa-trash"></i></button>
+                    <button data-id="${member.id}" class="edit-person" title="Edit Person"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#pencil"></use></svg></button>
+                    <button data-id="${member.id}" class="delete-person" title="Delete Person"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#trash"></use></svg></button>
                 </div>
             `;
             listContainer.appendChild(item);
@@ -961,8 +961,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <small class="item-details">${details}</small>
                 </div>
                 <div class="actions">
-                    <button data-id="${conn.id}" class="edit-rel" title="Edit Link"><i class="fa-solid fa-pencil"></i></button>
-                    <button data-id="${conn.id}" class="delete-rel" title="Delete Link"><i class="fa-solid fa-trash"></i></button>
+                    <button data-id="${conn.id}" class="edit-rel" title="Edit Link"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#pencil"></use></svg></button>
+                    <button data-id="${conn.id}" class="delete-rel" title="Delete Link"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#trash"></use></svg></button>
                 </div>
             `;
             listContainer.appendChild(item);

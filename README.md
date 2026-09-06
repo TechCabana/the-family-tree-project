@@ -222,7 +222,7 @@ Released under the MIT licence. The full text is in [LICENSE](LICENSE), and it c
 
 ### Credits and third-party terms
 
-- Icons: [Font Awesome](https://fontawesome.com/) (Free tier, loaded from cdnjs)
+- Icons: [Font Awesome Free](https://fontawesome.com/) (CC BY 4.0) — a hand-picked subset of solid-style icons, inlined as SVG symbols in `assets/icons.svg` rather than loaded from CDN
 - Font: [Nunito](https://fonts.google.com/specimen/Nunito), via Google Fonts
 - Export: [html2canvas](https://github.com/niklasvh/html2canvas), [jsPDF](https://github.com/parallax/jsPDF), and [html-to-image](https://github.com/bubkoo/html-to-image), all loaded from CDN, each under its own license
 - The demo family tree (Robert Johnson and descendants) is fictional and shown only to demonstrate the app
