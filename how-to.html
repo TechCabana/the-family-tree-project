@@ -8,14 +8,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="static-page">
     <div class="leaves-container"></div>
     <header class="app-header">
          <div class="header-left">
              <a href="index.html" class="logo">
-                <i class="fa-solid fa-tree"></i>
+                <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#tree"></use></svg>
                 <span>The Family Tree Project</span>
             </a>
         </div>
@@ -43,7 +42,7 @@
         <main class="doc-content">
             <section id="getting-started" class="doc-section">
                 <h2>Getting Started</h2>
-                <p>Welcome! This guide will walk you through all the features of the application. The project loads with a sample family tree to demonstrate its capabilities. To start fresh, simply click the red trash can icon (<i class="fa-solid fa-trash"></i>) at the bottom right. This will clear the canvas and present a large green plus button to add your first family member.</p>
+                <p>Welcome! This guide will walk you through all the features of the application. The project loads with a sample family tree to demonstrate its capabilities. To start fresh, simply click the red trash can icon (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#trash"></use></svg>) at the bottom right. This will clear the canvas and present a large green plus button to add your first family member.</p>
                 <figure class="image-placeholder-wrapper">
                     <img class="image-placeholder" src="assets/HowTo/GettingStarted.png" alt="Getting Started">
                     <figcaption>The "Get Started" prompt on a blank canvas.</figcaption>
@@ -56,8 +55,8 @@
                 <ul>
                     <li><strong>Pan:</strong> Click and drag on any empty space on the background to move the entire tree around.</li>
                     <li><strong>Zoom:</strong> Use the <strong>+/-</strong> buttons in the bottom-right corner to zoom in and out. You can also use your mouse wheel for more precise control.</li>
-                    <li><strong>Reset View:</strong> Click the circular arrow button (<i class="fa-solid fa-arrows-rotate"></i>) to reset the zoom, position, and any active filters to the default state.</li>
-                    <li><strong>Fullscreen:</strong> Use the expand icon (<i class="fa-solid fa-expand"></i>) to enter a distraction-free fullscreen mode.</li>
+                    <li><strong>Reset View:</strong> Click the circular arrow button (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#arrows-rotate"></use></svg>) to reset the zoom, position, and any active filters to the default state.</li>
+                    <li><strong>Fullscreen:</strong> Use the expand icon (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#expand"></use></svg>) to enter a distraction-free fullscreen mode.</li>
                 </ul>
                 <figure class="image-placeholder-wrapper">
                     <img class="image-placeholder" src="assets/HowTo/Navigating.png" alt="Navigating">
@@ -86,7 +85,7 @@
                 <ul>
                     <li><strong>Create a Link:</strong> In the "Relationship Manager," select two people from the dropdowns. Then, define the connection using the options for **Link**, **Type**, and **Status**. You can also add an optional **Note**.</li>
                     <li><strong>Important for Parent Links:</strong> For "Parent" links to work correctly, ensure the parent and child have different Generation Numbers set on their cards first. The application will prevent you from linking two people in the same generation as a parent and child.</li>
-                    <li><strong>Edit/Delete:</strong> Existing relationships are listed below the form. Use the pencil (<i class="fa-solid fa-pencil"></i>) to edit the link's details in a pop-up, or the trash (<i class="fa-solid fa-trash"></i>) icon to remove the connection entirely.</li>
+                    <li><strong>Edit/Delete:</strong> Existing relationships are listed below the form. Use the pencil (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#pencil"></use></svg>) to edit the link's details in a pop-up, or the trash (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#trash"></use></svg>) icon to remove the connection entirely.</li>
                 </ul>
                 <figure class="image-placeholder-wrapper">
                     <img class="image-placeholder" src="assets/HowTo/Relationships.png" alt="Relationships">
@@ -96,7 +95,7 @@
             
             <section id="using-controls" class="doc-section">
                 <h2>Using the Controls</h2>
-                <p>The "Controls" button (<i class="fa-solid fa-bars"></i>) in the header opens the sidebar with powerful tools:</p>
+                <p>The "Controls" button (<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#bars"></use></svg>) in the header opens the sidebar with powerful tools:</p>
                 <ul>
                     <li><strong>Focus Search:</strong> The search bar in the main menu lets you quickly find and center the view on a specific person.</li>
                     <li><strong>Filters:</strong> Use the dropdowns to filter your tree by a person's Role, their Status, the type of Links connecting them, or by a specific Tag.</li>

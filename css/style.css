@@ -78,7 +78,10 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.2; }
 .app-header { flex-shrink: 0; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.75rem 1.5rem; background-color: var(--bg-main); border-bottom: 1px solid var(--border-color); }
 .header-left { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
 .logo { display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem; font-weight: 600; color: var(--green-deep); text-decoration: none; margin-left: 1rem; flex-shrink: 0; }
-.logo i { font-size: 1.8rem; }
+/* Inline SVG icon subset (assets/icons.svg), swapped in for Font Awesome's icon font.
+   width/height: 1em mimics icon-font sizing so it scales with the surrounding font-size. */
+.icon { width: 1em; height: 1em; fill: currentColor; vertical-align: -0.125em; flex-shrink: 0; }
+.logo .icon { font-size: 1.8rem; }
 .logo-text { white-space: nowrap; margin: 0; font: inherit; color: inherit; }
 .main-nav { display: flex; justify-content: center; gap: 0.5rem; position: relative; flex: 2; }
 .main-nav a { padding: 0.5rem 1rem; text-decoration: none; color: var(--text-light); font-weight: 700; border-radius: var(--border-radius-ui); transition: all 0.3s ease; position: relative; }
@@ -88,7 +91,7 @@ h1, h2, h3, h4 { font-weight: 600; line-height: 1.2; }
 @keyframes slide-in { from { width: 0; left: 50%; } to { width: calc(100% - 2rem); left: 1rem; } }
 .header-actions { display: flex; align-items: center; gap: 1rem; justify-content: flex-end; flex: 1; }
 .search-container { position: relative; display: flex; align-items: center; }
-.search-container i { position: absolute; left: 10px; color: var(--text-light); pointer-events: none; }
+.search-container .icon { position: absolute; left: 10px; color: var(--text-light); pointer-events: none; }
 .search-container input { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-ui); outline: none; padding: 0.5rem 0.5rem 0.5rem 2.2rem; font-family: var(--font-family); font-size: 1rem; width: 250px; transition: all 0.3s; }
 .search-container input:focus { border-color: var(--green-deep); background-color: var(--bg-card); box-shadow: var(--focus-ring); }
 
@@ -132,8 +135,8 @@ input:checked + .slider:before { transform: translateX(22px); }
 /* Empty State Message */
 #empty-state-message { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-light); cursor: pointer; transition: color 0.3s ease; padding: 2rem; }
 #empty-state-message:hover { color: var(--green-deep); }
-#empty-state-message i { font-size: 5rem; border: 4px dashed var(--border-color); border-radius: 50%; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; transition: all 0.3s ease; }
-#empty-state-message:hover i { border-color: var(--green-deep); transform: scale(1.05); }
+#empty-state-message .icon-circle { font-size: 5rem; border: 4px dashed var(--border-color); border-radius: 50%; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; transition: all 0.3s ease; }
+#empty-state-message:hover .icon-circle { border-color: var(--green-deep); transform: scale(1.05); }
 
 /* Member Card */
 .member-card { position: relative; width: min(280px, calc(100vw - 2rem)); background: var(--bg-card); border-radius: var(--border-radius-card); box-shadow: var(--shadow-md); padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border: 2px solid transparent; }
