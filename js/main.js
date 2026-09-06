@@ -1085,7 +1085,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, { passive: false });
         const endTouch = (e) => {
-            if (e.touches.length < 2) pinchStartDist = null;
+            // Re-baseline on drop to exactly 2 fingers (e.g. a 3rd finger lifting)
+            // so the next pinch delta isn't measured against a stale distance.
+            if (e.touches.length === 2) pinchStartDist = touchDist(e.touches);
+            else if (e.touches.length < 2) pinchStartDist = null;
             if (e.touches.length === 0) isTouchPanning = false;
         };
         canvas.addEventListener('touchend', endTouch);
